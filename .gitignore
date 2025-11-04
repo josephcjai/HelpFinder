@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.next/
+coverage/
+
+# Env
+.env
+.env.local
+apps/web/.env.local
+services/api/.env
+services/api/.env.local
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+

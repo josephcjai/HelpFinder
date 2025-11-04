@@ -1,0 +1,206 @@
+openapi: 3.0.3
+info:
+  title: HelpFinder API
+  version: 0.1.0
+  description: Public REST API for HelpFinder marketplace
+servers:
+  - url: http://localhost:4000
+paths:
+  /tasks:
+    get:
+      summary: List tasks
+      operationId: listTasks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+    post:
+      summary: Create task
+      operationId: createTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTask'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+  /tasks/{taskId}/bids:
+    parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: List bids for a task
+      operationId: listBidsForTask
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bid'
+    post:
+      summary: Create a bid for a task
+      operationId: createBidForTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBid'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bid'
+  /bids/{bidId}/accept:
+    post:
+      summary: Accept a bid and create contract
+      operationId: acceptBid
+      parameters:
+        - name: bidId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contract created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+  /contracts/user/{userId}:
+    get:
+      summary: List contracts for a user (helper)
+      operationId: listContractsForUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contract'
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+        requesterId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        budgetMin:
+          type: number
+          nullable: true
+        budgetMax:
+          type: number
+          nullable: true
+        status:
+          type: string
+          enum: [open, in_progress, completed, cancelled]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateTask:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        budgetMin:
+          type: number
+        budgetMax:
+          type: number
+    Bid:
+      type: object
+      properties:
+        id:
+          type: string
+        taskId:
+          type: string
+        helperId:
+          type: string
+        amount:
+          type: number
+        message:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, accepted, withdrawn, declined, expired]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateBid:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+        message:
+          type: string
+    Contract:
+      type: object
+      properties:
+        id:
+          type: string
+        taskId:
+          type: string
+        helperId:
+          type: string
+        agreedAmount:
+          type: number
+        status:
+          type: string
+          enum: [pending, started, delivered, approved, cancelled]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
