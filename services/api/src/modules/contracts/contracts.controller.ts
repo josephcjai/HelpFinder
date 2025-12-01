@@ -6,10 +6,10 @@ import { ContractsService } from './contracts.service'
 @ApiTags('contracts')
 @Controller('contracts')
 export class ContractsController {
-  constructor(private readonly contracts: ContractsService) {}
+  constructor(private readonly contracts: ContractsService) { }
 
   @Get('user/:userId')
-  getForUser(@Param('userId') userId: string): ContractEntity[] {
+  async getForUser(@Param('userId') userId: string): Promise<ContractEntity[]> {
     return this.contracts.listForUser(userId)
   }
 }

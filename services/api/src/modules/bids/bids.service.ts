@@ -1,50 +1,51 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { randomUUID } from 'crypto'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
 import { BidEntity } from '../../entities/bid.entity'
 import { ContractEntity } from '../../entities/contract.entity'
-import { dataStore } from '../../store/data.store'
+import { TaskEntity } from '../../entities/task.entity'
 import { CreateBidDto } from './dto'
 
 @Injectable()
 export class BidsService {
-  listForTask(taskId: string): BidEntity[] {
-    return dataStore.bids.filter(b => b.taskId === taskId)
+  constructor(
+    @InjectRepository(BidEntity)
+    private readonly bidRepo: Repository<BidEntity>,
+    @InjectRepository(ContractEntity)
+    private readonly contractRepo: Repository<ContractEntity>,
+    @InjectRepository(TaskEntity)
+    private readonly taskRepo: Repository<TaskEntity>
+  ) { }
+
+  async listForTask(taskId: string): Promise<BidEntity[]> {
+    return this.bidRepo.find({ where: { taskId }, order: { createdAt: 'DESC' } })
   }
 
-  create(taskId: string, helperId: string, dto: CreateBidDto): BidEntity {
-    const task = dataStore.tasks.find(t => t.id === taskId)
+  async create(taskId: string, helperId: string, dto: CreateBidDto): Promise<BidEntity> {
+    const task = await this.taskRepo.findOneBy({ id: taskId })
     if (!task) throw new NotFoundException('Task not found')
-    const now = new Date()
-    const bid: BidEntity = {
-      id: randomUUID(),
+
+    const bid = this.bidRepo.create({
       taskId,
       helperId,
-      amount: dto.amount,
-      message: dto.message,
-      status: 'pending',
-      createdAt: now,
-      updatedAt: now,
-    }
-    dataStore.bids.unshift(bid)
-    return bid
+      ...dto,
+    })
+    return this.bidRepo.save(bid)
   }
 
-  accept(bidId: string): ContractEntity {
-    const bid = dataStore.bids.find(b => b.id === bidId)
+  async accept(bidId: string): Promise<ContractEntity> {
+    const bid = await this.bidRepo.findOneBy({ id: bidId })
     if (!bid) throw new NotFoundException('Bid not found')
+
     bid.status = 'accepted'
-    bid.updatedAt = new Date()
-    const contract: ContractEntity = {
-      id: randomUUID(),
+    await this.bidRepo.save(bid)
+
+    const contract = this.contractRepo.create({
       taskId: bid.taskId,
       helperId: bid.helperId,
       agreedAmount: bid.amount,
-      status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-    dataStore.contracts.unshift(contract)
-    return contract
+    })
+    return this.contractRepo.save(contract)
   }
 }
 

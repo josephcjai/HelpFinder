@@ -1,23 +1,24 @@
-import { Body, Controller, Get, Post } from '@nestjs/common'
+import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { TaskEntity } from '../../entities/task.entity'
+import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { CreateTaskDto } from './dto'
 import { TasksService } from './tasks.service'
 
 @ApiTags('tasks')
 @Controller('tasks')
 export class TasksController {
-  constructor(private readonly tasks: TasksService) {}
+  constructor(private readonly tasks: TasksService) { }
 
   @Get()
-  getTasks(): TaskEntity[] {
+  async getTasks(): Promise<TaskEntity[]> {
     return this.tasks.list()
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  createTask(@Body() body: CreateTaskDto): TaskEntity {
-    // TODO: replace hardcoded requester with auth context
-    return this.tasks.create('demo-requester-1', body)
+  async createTask(@Body() body: CreateTaskDto, @Request() req: any): Promise<TaskEntity> {
+    return this.tasks.create(req.user.userId, body)
   }
 }
 

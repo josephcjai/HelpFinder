@@ -34,6 +34,16 @@
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen",
             "preLaunchTask": "docker compose up"
+        },
+        {
+            "name": "Debug Client (Chrome)",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/apps/web",
+            "sourceMapPathOverrides": {
+                "webpack://_N_E/*": "${webRoot}/*"
+            }
         }
     ],
     "compounds": [
@@ -41,7 +51,8 @@
             "name": "Debug Full Stack (API + Web)",
             "configurations": [
                 "Debug API (NestJS)",
-                "Debug Web (Next.js)"
+                "Debug Web (Next.js)",
+                "Debug Client (Chrome)"
             ]
         }
     ]

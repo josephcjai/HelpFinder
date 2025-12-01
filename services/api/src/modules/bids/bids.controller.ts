@@ -8,24 +8,24 @@ import { BidsService } from './bids.service'
 @ApiTags('bids')
 @Controller()
 export class BidsController {
-  constructor(private readonly bids: BidsService) {}
+  constructor(private readonly bids: BidsService) { }
 
   @Get('tasks/:taskId/bids')
-  getBids(@Param('taskId') taskId: string): BidEntity[] {
+  async getBids(@Param('taskId') taskId: string): Promise<BidEntity[]> {
     return this.bids.listForTask(taskId)
   }
 
   @Post('tasks/:taskId/bids')
-  createBid(
+  async createBid(
     @Param('taskId') taskId: string,
     @Body() body: CreateBidDto
-  ): BidEntity {
+  ): Promise<BidEntity> {
     // TODO: replace hardcoded helper with auth context
     return this.bids.create(taskId, 'demo-helper-1', body)
   }
 
   @Post('bids/:bidId/accept')
-  acceptBid(@Param('bidId') bidId: string): ContractEntity {
+  async acceptBid(@Param('bidId') bidId: string): Promise<ContractEntity> {
     return this.bids.accept(bidId)
   }
 }
