@@ -17,5 +17,5 @@ services/api/.env.local
 .DS_Store
 Thumbs.db
 .idea/
-.vscode/
+
 

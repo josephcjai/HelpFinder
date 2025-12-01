@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "npm install",
+            "type": "shell",
+            "command": "npm.cmd install",
+            "problemMatcher": []
+        },
+        {
+            "label": "docker compose up",
+            "type": "shell",
+            "command": "docker compose up -d",
+            "problemMatcher": []
+        }
+    ]
+}

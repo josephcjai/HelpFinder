@@ -1,0 +1,48 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug API (NestJS)",
+            "type": "node",
+            "request": "launch",
+            "runtimeArgs": [
+                "run-script",
+                "dev"
+            ],
+            "runtimeExecutable": "npm.cmd",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "cwd": "${workspaceFolder}/services/api",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "preLaunchTask": "docker compose up"
+        },
+        {
+            "name": "Debug Web (Next.js)",
+            "type": "node",
+            "request": "launch",
+            "runtimeArgs": [
+                "run-script",
+                "dev"
+            ],
+            "runtimeExecutable": "npm.cmd",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "cwd": "${workspaceFolder}/apps/web",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "preLaunchTask": "docker compose up"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Debug Full Stack (API + Web)",
+            "configurations": [
+                "Debug API (NestJS)",
+                "Debug Web (Next.js)"
+            ]
+        }
+    ]
+}
