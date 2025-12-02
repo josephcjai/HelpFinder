@@ -20,7 +20,7 @@ export class AuthService {
     }
 
     async login(user: any) {
-        const payload = { email: user.email, sub: user.id }
+        const payload = { email: user.email, sub: user.id, role: user.role, name: user.name, isSuperAdmin: user.isSuperAdmin }
         return {
             access_token: this.jwtService.sign(payload),
         }
@@ -31,12 +31,8 @@ export class AuthService {
         if (existing) {
             throw new UnauthorizedException('User already exists')
         }
-        const passwordHash = await bcrypt.hash(pass, 10)
-        return this.usersService.create({
-            email,
-            passwordHash,
-            name,
-            role: 'requester',
-        })
+        const hash = await bcrypt.hash(pass, 10)
+        const user = await this.usersService.create(email, hash, name)
+        return this.login(user)
     }
 }

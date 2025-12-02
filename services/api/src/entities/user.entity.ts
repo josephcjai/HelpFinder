@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm'
 
-export type UserRole = 'requester' | 'helper'
+import { UserRole } from '@helpfinder/shared'
 
 @Entity('users')
 export class UserEntity {
@@ -22,8 +22,11 @@ export class UserEntity {
   @Column()
   name!: string
 
-  @Column({ default: 'requester' })
+  @Column({ type: 'varchar', default: 'user' })
   role!: UserRole
+
+  @Column({ default: false })
+  isSuperAdmin!: boolean
 
   @CreateDateColumn()
   createdAt!: Date

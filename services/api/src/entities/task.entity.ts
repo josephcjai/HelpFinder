@@ -19,10 +19,10 @@ export class TaskEntity {
   @Column({ nullable: true })
   category?: string
 
-  @Column('decimal', { nullable: true })
+  @Column('float', { nullable: true })
   budgetMin?: number
 
-  @Column('decimal', { nullable: true })
+  @Column('float', { nullable: true })
   budgetMax?: number
 
   @Column('float', { nullable: true })
