@@ -8,24 +8,26 @@ interface NavbarProps {
 
 export const Navbar = ({ user, onLogout }: NavbarProps) => {
     return (
-        <nav className="navbar">
+        <nav className="navbar glass">
             <div className="container">
-                <div className="nav-brand">HelpFinder</div>
+                <Link href="/" className="nav-brand flex items-center gap-2">
+                    <span>🤝</span> HelpFinder
+                </Link>
                 <div>
                     {user ? (
                         <div className="flex items-center gap-4">
-                            <span className="text-secondary">Welcome, <b>{user.name}</b></span>
+                            <span className="text-secondary text-sm hidden-mobile">Welcome, <b>{user.name}</b></span>
                             {user.role === 'admin' && (
-                                <Link href="/admin" className="btn btn-danger">
-                                    Admin Dashboard
+                                <Link href="/admin" className="btn btn-sm btn-danger">
+                                    Admin
                                 </Link>
                             )}
-                            <button onClick={onLogout} className="btn btn-secondary">Logout</button>
+                            <button onClick={onLogout} className="btn btn-sm btn-secondary">Logout</button>
                         </div>
                     ) : (
                         <div className="flex gap-4">
-                            <Link href="/login" className="btn btn-secondary">Login</Link>
-                            <Link href="/register" className="btn btn-primary">Register</Link>
+                            <Link href="/login" className="btn btn-sm btn-secondary">Login</Link>
+                            <Link href="/register" className="btn btn-sm btn-primary">Register</Link>
                         </div>
                     )}
                 </div>

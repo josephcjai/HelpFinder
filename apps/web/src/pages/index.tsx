@@ -71,38 +71,67 @@ export default function Home() {
     <>
       <Navbar user={user} onLogout={handleLogout} />
 
-      <main className="container">
-        <div className="mb-8">
-          <h1 className="heading-1">Find help nearby.</h1>
-          <p className="text-secondary">Connect with helpers for domestic and small manual work.</p>
-        </div>
+      <main className="container pb-12">
+        {/* Hero Section */}
+        {!user && (
+          <section className="hero">
+            <div className="hero-content">
+              <h1 className="heading-1 mb-4">
+                Get help, <span style={{ color: 'var(--primary)' }}>fast.</span>
+              </h1>
+              <p className="text-secondary text-lg mb-8" style={{ fontSize: '1.25rem' }}>
+                Connect with trusted neighbors for tasks big and small. From gardening to moving, we've got you covered.
+              </p>
+              <div className="flex gap-4">
+                <a href="/register" className="btn btn-primary" style={{ padding: '0.75rem 2rem', fontSize: '1.1rem' }}>Get Started</a>
+                <a href="/login" className="btn btn-secondary" style={{ padding: '0.75rem 2rem', fontSize: '1.1rem' }}>Login</a>
+              </div>
+            </div>
+            <div className="hero-image hidden-mobile">
+              <img src="/hero-banner.png" alt="Community Help" />
+            </div>
+          </section>
+        )}
 
         {user && (
           <div className="mb-8">
-            {!showCreateForm && !editingTask ? (
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="btn btn-primary"
-              >
-                + Post a New Task
-              </button>
-            ) : (
-              <CreateTaskForm
-                onTaskSaved={handleTaskSaved}
-                onCancel={() => {
-                  setShowCreateForm(false)
-                  setEditingTask(null)
-                }}
-                editingTask={editingTask}
-              />
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="heading-1">Welcome back, {user.name.split(' ')[0]}!</h1>
+                <p className="text-secondary">Here's what's happening in your neighborhood.</p>
+              </div>
+              {!showCreateForm && !editingTask && (
+                <button
+                  onClick={() => setShowCreateForm(true)}
+                  className="btn btn-primary"
+                >
+                  + Post a New Task
+                </button>
+              )}
+            </div>
+
+            {/* Create/Edit Form Area */}
+            {(showCreateForm || editingTask) && (
+              <div className="mb-8 p-6 bg-white rounded-2xl shadow-lg border border-slate-100">
+                <CreateTaskForm
+                  onTaskSaved={handleTaskSaved}
+                  onCancel={() => {
+                    setShowCreateForm(false)
+                    setEditingTask(null)
+                  }}
+                  editingTask={editingTask}
+                />
+              </div>
             )}
           </div>
         )}
 
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="heading-2">Recent Tasks</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="heading-2">
+            {activeTab === 'all' ? 'Recent Tasks' : 'My Tasks'}
+          </h2>
           {user && (
-            <div className="tabs" style={{ marginBottom: 0, borderBottom: 'none' }}>
+            <div className="tabs">
               <button
                 onClick={() => setActiveTab('all')}
                 className={`tab ${activeTab === 'all' ? 'active' : ''}`}
@@ -119,14 +148,20 @@ export default function Home() {
           )}
         </div>
 
-        {loading && <p>Loading...</p>}
-        {!loading && displayedTasks.length === 0 && (
-          <div className="card text-secondary">
-            No tasks found. Be the first to post one!
+        {loading && (
+          <div className="flex justify-center py-12">
+            <div className="animate-pulse text-secondary">Loading tasks...</div>
           </div>
         )}
 
-        <div className="flex-col gap-4">
+        {!loading && displayedTasks.length === 0 && (
+          <div className="card text-center py-12 text-secondary">
+            <p className="text-lg mb-2">No tasks found.</p>
+            <p>Be the first to post one!</p>
+          </div>
+        )}
+
+        <div className="grid">
           {displayedTasks.map(t => (
             <TaskCard
               key={t.id}

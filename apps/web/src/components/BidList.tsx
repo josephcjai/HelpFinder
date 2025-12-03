@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Task, UserProfile, Bid } from '@helpfinder/shared'
 import { getBids, placeBid, updateBid, acceptBid } from '../utils/api'
+import { useToast } from './ui/Toast'
+import { useModal } from './ui/ModalProvider'
 
 interface BidListProps {
     task: Task
@@ -14,6 +16,9 @@ export const BidList = ({ task, user, onBidAccepted }: BidListProps) => {
     const [bidMessage, setBidMessage] = useState('')
     const [showBidForm, setShowBidForm] = useState(false)
     const [editingBidId, setEditingBidId] = useState<string | null>(null)
+
+    const { showToast } = useToast()
+    const { showConfirmation } = useModal()
 
     useEffect(() => {
         loadBids()
@@ -33,10 +38,10 @@ export const BidList = ({ task, user, onBidAccepted }: BidListProps) => {
         try {
             if (editingBidId) {
                 await updateBid(editingBidId, Number(bidAmount), bidMessage)
-                alert('Bid updated successfully!')
+                showToast('Bid updated successfully!', 'success')
             } else {
                 await placeBid(task.id, Number(bidAmount), bidMessage)
-                alert('Bid placed successfully!')
+                showToast('Bid placed successfully!', 'success')
             }
             setBidAmount('')
             setBidMessage('')
@@ -44,7 +49,7 @@ export const BidList = ({ task, user, onBidAccepted }: BidListProps) => {
             setEditingBidId(null)
             loadBids()
         } catch (e) {
-            alert('Failed to save bid')
+            showToast('Failed to save bid', 'error')
         }
     }
 
@@ -62,10 +67,23 @@ export const BidList = ({ task, user, onBidAccepted }: BidListProps) => {
         setBidMessage('')
     }
 
-    const handleAcceptBid = async (bidId: string) => {
-        if (!confirm('Accept this bid? This will assign the task.')) return
-        await acceptBid(bidId)
-        onBidAccepted()
+    const handleAcceptBid = (bidId: string) => {
+        const bid = bids.find(b => b.id === bidId)
+        if (!bid) return
+
+        showConfirmation({
+            title: `Accept Bid of $${bid.amount}?`,
+            message: `This will assign the task to ${bid.helper?.name || bid.helperName || 'the helper'}.`,
+            onConfirm: async () => {
+                try {
+                    await acceptBid(bidId)
+                    showToast('Bid accepted successfully', 'success')
+                    onBidAccepted()
+                } catch (e) {
+                    showToast('Failed to accept bid', 'error')
+                }
+            }
+        })
     }
 
     // If user is the requester, show received bids
@@ -76,21 +94,24 @@ export const BidList = ({ task, user, onBidAccepted }: BidListProps) => {
                 {bids.length === 0 ? <p className="text-sm text-secondary">No bids yet.</p> : (
                     <div className="flex-col gap-2">
                         {bids.map(bid => (
-                            <div key={bid.id} className="p-3 bg-slate-50 rounded border flex justify-between items-center">
-                                <div>
-                                    <div className="font-bold text-primary">${bid.amount}</div>
-                                    <div className="text-sm">{bid.message}</div>
-                                    <div className="text-xs text-secondary">
-                                        by {bid.helper?.name || bid.helperName || 'Helper'}
-                                        {bid.helper?.email && <span className="text-gray-400 ml-1">({bid.helper.email})</span>}
+                            <div key={bid.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex flex-wrap gap-4 justify-between items-center">
+                                <div className="flex-1 min-w-[200px]">
+                                    <div className="flex items-baseline gap-2 mb-1">
+                                        <div className="font-bold text-lg text-primary">${bid.amount}</div>
+                                        <div className="text-xs text-secondary">
+                                            by {bid.helper?.name || bid.helperName || 'Helper'}
+                                        </div>
                                     </div>
+                                    <div className="text-sm text-slate-600 break-words">{bid.message}</div>
                                 </div>
-                                {bid.status === 'pending' && task.status === 'open' && (
-                                    <button onClick={() => handleAcceptBid(bid.id)} className="btn btn-sm btn-primary">
-                                        Accept
-                                    </button>
-                                )}
-                                {bid.status === 'accepted' && <span className="badge badge-success">Accepted</span>}
+                                <div className="flex-shrink-0">
+                                    {bid.status === 'pending' && task.status === 'open' && (
+                                        <button onClick={() => handleAcceptBid(bid.id)} className="btn btn-sm btn-primary">
+                                            Accept Bid
+                                        </button>
+                                    )}
+                                    {bid.status === 'accepted' && <span className="badge badge-success">Accepted</span>}
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -105,23 +126,23 @@ export const BidList = ({ task, user, onBidAccepted }: BidListProps) => {
     if (myBid && !showBidForm) {
         return (
             <div className="mt-4 border-t pt-4">
-                <div className="p-3 bg-blue-50 rounded border border-blue-200">
-                    <div className="flex justify-between items-start mb-2">
-                        <p className="text-sm font-bold text-blue-800">You have placed a bid on this task.</p>
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <div className="flex justify-between items-start mb-3">
+                        <div>
+                            <p className="text-sm font-bold text-blue-900 mb-1">Your Bid</p>
+                            <span className={`badge badge-${myBid.status === 'accepted' ? 'success' : 'secondary'}`}>
+                                {myBid.status.toUpperCase()}
+                            </span>
+                        </div>
                         {myBid.status === 'pending' && task.status === 'open' && (
-                            <button onClick={() => handleEditBid(myBid)} className="text-xs text-blue-600 hover:underline">
+                            <button onClick={() => handleEditBid(myBid)} className="btn btn-sm btn-secondary bg-white text-xs">
                                 Edit Bid
                             </button>
                         )}
                     </div>
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <span className="font-bold text-lg">${myBid.amount}</span>
-                            <span className="text-secondary text-sm ml-2">{myBid.message}</span>
-                        </div>
-                        <span className={`badge badge-${myBid.status === 'accepted' ? 'success' : 'secondary'}`}>
-                            {myBid.status.toUpperCase()}
-                        </span>
+                    <div className="flex items-baseline gap-3">
+                        <span className="font-bold text-2xl text-blue-700">${myBid.amount}</span>
+                        <span className="text-blue-600 text-sm">{myBid.message}</span>
                     </div>
                 </div>
             </div>
