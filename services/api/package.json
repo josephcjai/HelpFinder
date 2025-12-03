@@ -11,7 +11,8 @@
     "demote:admin": "ts-node scripts/demote-admin.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "echo 'add linter'",
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@helpfinder/shared": "*",

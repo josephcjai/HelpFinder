@@ -1,3 +1,5 @@
+import { Task, Bid } from '@helpfinder/shared'
+
 export const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'
 
 export const getToken = () => {
@@ -48,14 +50,128 @@ export const getUserProfile = async () => {
     return null
 }
 
-export const getUsers = async () => {
-    const res = await authenticatedFetch('/users')
-    if (res.ok) return res.json()
+export const getTasks = async (): Promise<Task[]> => {
+    const res = await authenticatedFetch('/tasks')
+    if (res.ok) {
+        return res.json()
+    }
+    throw new Error('Failed to fetch tasks')
+}
+
+export const createTask = async (task: Partial<Task>) => {
+    return authenticatedFetch('/tasks', {
+        method: 'POST',
+        body: JSON.stringify(task)
+    })
+}
+
+export const updateTask = async (id: string, task: Partial<Task>) => {
+    return authenticatedFetch(`/tasks/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(task)
+    })
+}
+
+export const deleteTask = async (id: string) => {
+    return authenticatedFetch(`/tasks/${id}`, {
+        method: 'DELETE'
+    })
+}
+
+export const placeBid = async (taskId: string, amount: number, message: string) => {
+    const res = await authenticatedFetch(`/tasks/${taskId}/bids`, {
+        method: 'POST',
+        body: JSON.stringify({ amount, message })
+    })
+    if (res.ok) {
+        return res.json()
+    }
+    throw new Error('Failed to place bid')
+}
+
+export const updateBid = async (bidId: string, amount: number, message: string) => {
+    const res = await authenticatedFetch(`/bids/${bidId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ amount, message })
+    })
+    if (res.ok) {
+        return res.json()
+    }
+    throw new Error('Failed to update bid')
+}
+
+export const getBids = async (taskId: string): Promise<Bid[]> => {
+    const res = await authenticatedFetch(`/tasks/${taskId}/bids`)
+    if (res.ok) {
+        return res.json()
+    }
     return []
 }
 
+export const acceptBid = async (bidId: string) => {
+    const res = await authenticatedFetch(`/bids/${bidId}/accept`, {
+        method: 'POST'
+    })
+    if (res.ok) {
+        return res.json()
+    }
+    throw new Error('Failed to accept bid')
+}
+
+export const requestCompletion = async (taskId: string) => {
+    const res = await authenticatedFetch(`/tasks/${taskId}/complete-request`, {
+        method: 'POST'
+    })
+    if (res.ok) {
+        return res.json()
+    }
+    const text = await res.text()
+    console.error('Request completion failed:', res.status, text)
+    throw new Error(`Failed to request completion: ${text}`)
+}
+
+export const approveCompletion = async (taskId: string) => {
+    const res = await authenticatedFetch(`/tasks/${taskId}/complete-approve`, {
+        method: 'POST'
+    })
+    if (res.ok) {
+        return res.json()
+    }
+    throw new Error('Failed to approve completion')
+}
+
+export const rejectCompletion = async (taskId: string) => {
+    const res = await authenticatedFetch(`/tasks/${taskId}/complete-reject`, {
+        method: 'POST'
+    })
+    if (res.ok) {
+        return res.json()
+    }
+    throw new Error('Failed to reject completion')
+}
+
+export const reopenTask = async (taskId: string) => {
+    const res = await authenticatedFetch(`/tasks/${taskId}/reopen`, {
+        method: 'POST'
+    })
+    if (res.ok) {
+        return res.json()
+    }
+    throw new Error('Failed to reopen task')
+}
+
+export const getUsers = async () => {
+    const res = await authenticatedFetch('/users')
+    if (res.ok) {
+        return res.json()
+    }
+    throw new Error('Failed to fetch users')
+}
+
 export const deleteUser = async (id: string) => {
-    return authenticatedFetch(`/users/${id}`, { method: 'DELETE' })
+    return authenticatedFetch(`/users/${id}`, {
+        method: 'DELETE'
+    })
 }
 
 export const updateUserRole = async (id: string, role: string) => {

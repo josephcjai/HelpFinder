@@ -2,11 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm'
 
 import { UserRole } from '@helpfinder/shared'
+import { TaskEntity } from './task.entity'
 
 @Entity('users')
 export class UserEntity {
@@ -24,6 +26,9 @@ export class UserEntity {
 
   @Column({ type: 'varchar', default: 'user' })
   role!: UserRole
+
+  @OneToMany(() => TaskEntity, (task) => task.requester)
+  tasks!: TaskEntity[]
 
   @Column({ default: false })
   isSuperAdmin!: boolean

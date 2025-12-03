@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { apiBase, authenticatedFetch, getToken, getUserProfile, removeToken } from '../utils/api'
+import { getTasks, getUserProfile, removeToken, getToken } from '../utils/api'
 import { Task, UserProfile } from '@helpfinder/shared'
+import { Navbar } from '../components/Navbar'
+import { CreateTaskForm } from '../components/CreateTaskForm'
+import { TaskCard } from '../components/TaskCard'
 
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -10,10 +12,10 @@ export default function Home() {
 
   // New/Edit Task State
   const [showCreateForm, setShowCreateForm] = useState(false)
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
-  const [title, setTitle] = useState('')
-  const [desc, setDesc] = useState('')
-  const [budget, setBudget] = useState('')
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
+
+  // Tab State
+  const [activeTab, setActiveTab] = useState<'all' | 'my'>('all')
 
   useEffect(() => {
     const init = async () => {
@@ -21,86 +23,45 @@ export default function Home() {
         const profile = await getUserProfile()
         setUser(profile)
       }
-      fetch(`${apiBase}/tasks`)
-        .then(r => r.json())
-        .then(setTasks)
-        .catch(() => setTasks([]))
-        .finally(() => setLoading(false))
+      loadTasks()
     }
     init()
   }, [])
+
+  const loadTasks = async () => {
+    try {
+      const data = await getTasks()
+      setTasks(data)
+    } catch (e) {
+      setTasks([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleLogout = () => {
     removeToken()
     setUser(null)
   }
 
-  const handleSubmitTask = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      const url = editingTaskId ? `/tasks/${editingTaskId}` : '/tasks'
-      const method = editingTaskId ? 'PATCH' : 'POST'
-
-      const res = await authenticatedFetch(url, {
-        method,
-        body: JSON.stringify({
-          title,
-          description: desc,
-          budgetMin: budget ? Number(budget) : undefined
-        })
-      })
-
-      if (res.ok) {
-        const savedTask = await res.json()
-        if (editingTaskId) {
-          setTasks(tasks.map(t => t.id === editingTaskId ? savedTask : t))
-          setEditingTaskId(null)
-        } else {
-          setTasks([savedTask, ...tasks])
-          setShowCreateForm(false)
-        }
-        setTitle('')
-        setDesc('')
-        setBudget('')
-      } else {
-        alert('Failed to save task')
-      }
-    } catch (err) {
-      console.error(err)
+  const handleTaskSaved = (savedTask: Task, isEdit: boolean) => {
+    if (isEdit) {
+      setTasks(tasks.map(t => t.id === savedTask.id ? savedTask : t))
+      setEditingTask(null)
+    } else {
+      setTasks([savedTask, ...tasks])
     }
+    setShowCreateForm(false)
   }
 
   const handleEdit = (task: Task) => {
-    setEditingTaskId(task.id)
-    setTitle(task.title)
-    setDesc(task.description || '')
-    setBudget(task.budgetMin?.toString() || '')
+    setEditingTask(task)
+    setShowCreateForm(true)
   }
 
-  const handleCancelEdit = () => {
-    setEditingTaskId(null)
-    setTitle('')
-    setDesc('')
-    setBudget('')
+  const handleDelete = (taskId: string) => {
+    setTasks(tasks.filter(t => t.id !== taskId))
   }
-
-  const handleDelete = async (taskId: string) => {
-    if (!confirm('Are you sure you want to delete this task?')) return
-    try {
-      const res = await authenticatedFetch(`/tasks/${taskId}`, { method: 'DELETE' })
-      if (res.ok) {
-        setTasks(tasks.filter(t => t.id !== taskId))
-      } else {
-        const text = await res.text()
-        alert(`Failed to delete task: ${res.status} ${text}`)
-      }
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  // Tab State
-  const [activeTab, setActiveTab] = useState<'all' | 'my'>('all')
 
   const displayedTasks = activeTab === 'all'
     ? tasks
@@ -108,29 +69,7 @@ export default function Home() {
 
   return (
     <>
-      <nav className="navbar">
-        <div className="container">
-          <div className="nav-brand">HelpFinder</div>
-          <div>
-            {user ? (
-              <div className="flex items-center gap-4">
-                <span className="text-secondary">Welcome, <b>{user.name}</b></span>
-                {user.role === 'admin' && (
-                  <Link href="/admin" className="btn btn-danger">
-                    Admin Dashboard
-                  </Link>
-                )}
-                <button onClick={handleLogout} className="btn btn-secondary">Logout</button>
-              </div>
-            ) : (
-              <div className="flex gap-4">
-                <Link href="/login" className="btn btn-secondary">Login</Link>
-                <Link href="/register" className="btn btn-primary">Register</Link>
-              </div>
-            )}
-          </div>
-        </div>
-      </nav>
+      <Navbar user={user} onLogout={handleLogout} />
 
       <main className="container">
         <div className="mb-8">
@@ -140,7 +79,7 @@ export default function Home() {
 
         {user && (
           <div className="mb-8">
-            {!showCreateForm && !editingTaskId ? (
+            {!showCreateForm && !editingTask ? (
               <button
                 onClick={() => setShowCreateForm(true)}
                 className="btn btn-primary"
@@ -148,56 +87,14 @@ export default function Home() {
                 + Post a New Task
               </button>
             ) : (
-              <div className="card">
-                <h2 className="heading-2">{editingTaskId ? 'Edit Task' : 'Post a New Task'}</h2>
-                <form onSubmit={handleSubmitTask} className="flex-col gap-4">
-                  <div>
-                    <label className="label">Title</label>
-                    <input
-                      className="input"
-                      placeholder="e.g. Fix my sink"
-                      value={title}
-                      onChange={e => setTitle(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Description</label>
-                    <textarea
-                      className="input"
-                      placeholder="Describe what you need help with..."
-                      value={desc}
-                      onChange={e => setDesc(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Budget (Optional)</label>
-                    <input
-                      type="number"
-                      className="input"
-                      placeholder="e.g. 50"
-                      value={budget}
-                      onChange={e => setBudget(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
-                      {editingTaskId ? 'Update Task' : 'Post Task'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleCancelEdit()
-                        setShowCreateForm(false)
-                      }}
-                      className="btn btn-secondary"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
+              <CreateTaskForm
+                onTaskSaved={handleTaskSaved}
+                onCancel={() => {
+                  setShowCreateForm(false)
+                  setEditingTask(null)
+                }}
+                editingTask={editingTask}
+              />
             )}
           </div>
         )}
@@ -231,25 +128,14 @@ export default function Home() {
 
         <div className="flex-col gap-4">
           {displayedTasks.map(t => (
-            <div key={t.id} className="card">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="heading-2" style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>{t.title}</h3>
-                  <p className="text-secondary mb-4">{t.description || 'No description provided.'}</p>
-                  {typeof t.budgetMin === 'number' && (
-                    <div className="text-sm" style={{ color: 'var(--success)', fontWeight: 600 }}>
-                      Budget: ${t.budgetMin}{t.budgetMax ? ` - $${t.budgetMax}` : ''}
-                    </div>
-                  )}
-                </div>
-                {user && (user.id === t.requesterId || user.role === 'admin') && (
-                  <div className="flex gap-2">
-                    <button onClick={() => handleEdit(t)} className="btn btn-secondary">Edit</button>
-                    <button onClick={() => handleDelete(t.id)} className="btn btn-danger">Delete</button>
-                  </div>
-                )}
-              </div>
-            </div>
+            <TaskCard
+              key={t.id}
+              task={t}
+              user={user}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onRefresh={loadTasks}
+            />
           ))}
         </div>
       </main>

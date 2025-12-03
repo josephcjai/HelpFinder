@@ -1,17 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
-
-export type BidStatus = 'pending' | 'accepted' | 'withdrawn' | 'declined' | 'expired'
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm'
+import { UserEntity } from './user.entity'
+import { TaskEntity } from './task.entity'
+import { BidStatus } from '@helpfinder/shared'
 
 @Entity('bids')
 export class BidEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string
-
-  @Column()
-  taskId!: string
-
-  @Column()
-  helperId!: string
 
   @Column('decimal')
   amount!: number
@@ -19,13 +14,21 @@ export class BidEntity {
   @Column({ nullable: true })
   message?: string
 
-  @Column({ default: 'pending' })
+  @Column({
+    type: 'varchar', // Use varchar for simple string enum storage
+    default: 'pending'
+  })
   status!: BidStatus
 
   @CreateDateColumn()
   createdAt!: Date
 
-  @UpdateDateColumn()
-  updatedAt!: Date
-}
+  @ManyToOne(() => TaskEntity, (task) => task.bids, { onDelete: 'CASCADE' })
+  task!: TaskEntity
 
+  @Column()
+  helperId!: string
+
+  @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
+  helper!: UserEntity
+}

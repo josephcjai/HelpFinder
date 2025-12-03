@@ -8,7 +8,7 @@ export interface UserProfile {
     isSuperAdmin?: boolean
 }
 
-export type TaskStatus = 'open' | 'in_progress' | 'completed' | 'cancelled'
+export type TaskStatus = 'open' | 'in_progress' | 'review_pending' | 'completed' | 'cancelled'
 
 export interface Task {
     id: string
@@ -21,6 +21,22 @@ export interface Task {
     latitude?: number
     longitude?: number
     status: TaskStatus
+    completedAt?: Date
     createdAt: Date
     updatedAt: Date
+    bids?: Bid[]
+}
+
+export type BidStatus = 'pending' | 'accepted' | 'rejected'
+
+export interface Bid {
+    id: string
+    taskId: string
+    helperId: string
+    amount: number
+    message?: string
+    status: BidStatus
+    createdAt: Date
+    helperName?: string // For UI convenience
+    helper?: UserProfile
 }

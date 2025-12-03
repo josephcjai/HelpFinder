@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
-
-export type TaskStatus = 'open' | 'in_progress' | 'completed' | 'cancelled'
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { UserEntity } from './user.entity'
+import { BidEntity } from './bid.entity'
+import { TaskStatus } from '@helpfinder/shared'
 
 @Entity('tasks')
 export class TaskEntity {
@@ -31,13 +32,21 @@ export class TaskEntity {
   @Column('float', { nullable: true })
   longitude?: number
 
-  @Column({ default: 'open' })
+  @Column({ type: 'varchar', default: 'open' })
   status!: TaskStatus
+
+  @Column({ nullable: true })
+  completedAt?: Date
 
   @CreateDateColumn()
   createdAt!: Date
 
   @UpdateDateColumn()
   updatedAt!: Date
-}
 
+  @ManyToOne(() => UserEntity, (user) => user.tasks, { onDelete: 'CASCADE' })
+  requester!: UserEntity
+
+  @OneToMany(() => BidEntity, (bid) => bid.task)
+  bids!: BidEntity[]
+}

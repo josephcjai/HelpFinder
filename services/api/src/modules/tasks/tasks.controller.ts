@@ -12,7 +12,7 @@ export class TasksController {
 
   @Get()
   async getTasks(): Promise<TaskEntity[]> {
-    return this.tasks.list()
+    return this.tasks.findAll()
   }
 
   @UseGuards(JwtAuthGuard)
@@ -36,15 +36,32 @@ export class TasksController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  async deleteTask(@Param('id') id: string, @Request() req: any): Promise<void> {
-    try {
-      await this.tasks.delete(id, req.user.id, req.user.role)
-    } catch (e: any) {
-      if (e.message === 'Forbidden') {
-        throw new ForbiddenException()
-      }
-      throw e
-    }
+  async delete(@Param('id') id: string, @Request() req: any) {
+    const isAdmin = req.user.role === 'admin'
+    return this.tasks.delete(id, req.user.id, isAdmin)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/complete-request')
+  async requestCompletion(@Param('id') id: string, @Request() req: any) {
+    return this.tasks.requestCompletion(id, req.user.id)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/complete-approve')
+  async approveCompletion(@Param('id') id: string, @Request() req: any) {
+    return this.tasks.approveCompletion(id, req.user.id)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/complete-reject')
+  async rejectCompletion(@Param('id') id: string, @Request() req: any) {
+    return this.tasks.rejectCompletion(id, req.user.id)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/reopen')
+  async reopenTask(@Param('id') id: string, @Request() req: any) {
+    return this.tasks.reopenTask(id, req.user.id)
   }
 }
-
