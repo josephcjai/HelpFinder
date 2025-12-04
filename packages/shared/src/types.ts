@@ -20,6 +20,7 @@ export interface Task {
     budgetMax?: number
     latitude?: number
     longitude?: number
+    address?: string
     status: TaskStatus
     completedAt?: Date
     createdAt: Date

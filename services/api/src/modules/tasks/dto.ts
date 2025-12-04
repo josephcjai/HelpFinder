@@ -29,5 +29,20 @@ export class CreateTaskDto {
   @IsNumber()
   @Min(0)
   budgetMax?: number
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  latitude?: number
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  longitude?: number
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  address?: string
 }
 

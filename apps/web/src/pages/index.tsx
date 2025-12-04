@@ -5,6 +5,10 @@ import { Navbar } from '../components/Navbar'
 import { CreateTaskForm } from '../components/CreateTaskForm'
 import { TaskCard } from '../components/TaskCard'
 
+import dynamic from 'next/dynamic'
+
+const MapComponent = dynamic(() => import('../components/MapComponent'), { ssr: false })
+
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
@@ -16,6 +20,12 @@ export default function Home() {
 
   // Tab State
   const [activeTab, setActiveTab] = useState<'all' | 'my'>('all')
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
+
+  // Search State
+  const [isSearchActive, setIsSearchActive] = useState(false)
+  const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [searchRadius, setSearchRadius] = useState(10)
 
   useEffect(() => {
     const init = async () => {
@@ -28,14 +38,23 @@ export default function Home() {
     init()
   }, [])
 
-  const loadTasks = async () => {
+  const loadTasks = async (lat?: number, lng?: number, radius?: number) => {
     try {
-      const data = await getTasks()
+      setLoading(true)
+      const data = await getTasks(lat, lng, radius)
       setTasks(data)
     } catch (e) {
       setTasks([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleApplyFilter = () => {
+    if (isSearchActive && searchLocation) {
+      loadTasks(searchLocation.lat, searchLocation.lng, searchRadius)
+    } else {
+      loadTasks()
     }
   }
 
@@ -126,26 +145,109 @@ export default function Home() {
           </div>
         )}
 
+        {/* Location Filter Section */}
+        <div className="mb-6 p-4 bg-white rounded-xl shadow-sm border border-slate-100">
+          <div className="flex items-center gap-4 mb-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isSearchActive}
+                onChange={(e) => {
+                  setIsSearchActive(e.target.checked)
+                  if (!e.target.checked) {
+                    loadTasks() // Reset if unchecked
+                  }
+                }}
+                className="w-5 h-5 text-primary rounded focus:ring-primary"
+              />
+              <span className="font-bold text-slate-700">Filter by Location</span>
+            </label>
+          </div>
+
+          {isSearchActive && (
+            <div className="animate-fade-in">
+              <div className="flex flex-wrap gap-6 items-end">
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-sm font-medium text-slate-600 mb-1">
+                    Search Radius: <span className="text-primary font-bold">{searchRadius} km</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="50"
+                    value={searchRadius}
+                    onChange={(e) => setSearchRadius(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                  />
+                </div>
+
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-sm font-medium text-slate-600 mb-1">
+                    Selected Location
+                  </label>
+                  <div className="p-2 bg-slate-50 rounded border border-slate-200 text-sm text-slate-600">
+                    {searchLocation
+                      ? `${searchLocation.lat.toFixed(4)}, ${searchLocation.lng.toFixed(4)}`
+                      : 'Click on the map to select a location'}
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleApplyFilter}
+                  disabled={!searchLocation}
+                  className="btn btn-primary"
+                >
+                  Apply Filter
+                </button>
+              </div>
+
+              {viewMode === 'list' && (
+                <div className="mt-4 text-sm text-amber-600 bg-amber-50 p-2 rounded">
+                  💡 Switch to <strong>Map View</strong> to select a location easily.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="flex items-center justify-between mb-6">
           <h2 className="heading-2">
             {activeTab === 'all' ? 'Recent Tasks' : 'My Tasks'}
           </h2>
-          {user && (
+          <div className="flex gap-4 items-center">
+            {/* View Toggle */}
             <div className="tabs">
               <button
-                onClick={() => setActiveTab('all')}
-                className={`tab ${activeTab === 'all' ? 'active' : ''}`}
+                onClick={() => setViewMode('list')}
+                className={`tab ${viewMode === 'list' ? 'active' : ''}`}
               >
-                All Tasks
+                List
               </button>
               <button
-                onClick={() => setActiveTab('my')}
-                className={`tab ${activeTab === 'my' ? 'active' : ''}`}
+                onClick={() => setViewMode('map')}
+                className={`tab ${viewMode === 'map' ? 'active' : ''}`}
               >
-                My Tasks
+                Map
               </button>
             </div>
-          )}
+
+            {user && (
+              <div className="tabs">
+                <button
+                  onClick={() => setActiveTab('all')}
+                  className={`tab ${activeTab === 'all' ? 'active' : ''}`}
+                >
+                  All Tasks
+                </button>
+                <button
+                  onClick={() => setActiveTab('my')}
+                  className={`tab ${activeTab === 'my' ? 'active' : ''}`}
+                >
+                  My Tasks
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {loading && (
@@ -161,18 +263,30 @@ export default function Home() {
           </div>
         )}
 
-        <div className="grid">
-          {displayedTasks.map(t => (
-            <TaskCard
-              key={t.id}
-              task={t}
-              user={user}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onRefresh={loadTasks}
+        {viewMode === 'list' ? (
+          <div className="grid">
+            {displayedTasks.map(t => (
+              <TaskCard
+                key={t.id}
+                task={t}
+                user={user}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onRefresh={() => handleApplyFilter()}
+              />
+            ))}
+          </div>
+        ) : (
+          <div style={{ height: '600px', width: '100%' }}>
+            <MapComponent
+              tasks={displayedTasks}
+              zoom={13}
+              onLocationSelect={isSearchActive ? (lat, lng) => setSearchLocation({ lat, lng }) : undefined}
+              selectedLocation={searchLocation}
+              searchRadius={isSearchActive ? searchRadius : undefined}
             />
-          ))}
-        </div>
+          </div>
+        )}
       </main>
     </>
   )

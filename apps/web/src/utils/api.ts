@@ -50,8 +50,13 @@ export const getUserProfile = async () => {
     return null
 }
 
-export const getTasks = async (): Promise<Task[]> => {
-    const res = await authenticatedFetch('/tasks')
+export const getTasks = async (lat?: number, lng?: number, radius?: number): Promise<Task[]> => {
+    const params = new URLSearchParams()
+    if (lat !== undefined) params.append('lat', lat.toString())
+    if (lng !== undefined) params.append('lng', lng.toString())
+    if (radius !== undefined) params.append('radius', radius.toString())
+
+    const res = await authenticatedFetch(`/tasks?${params.toString()}`)
     if (res.ok) {
         return res.json()
     }

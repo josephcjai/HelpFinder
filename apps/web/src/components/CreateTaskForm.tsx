@@ -8,16 +8,24 @@ interface CreateTaskFormProps {
     editingTask?: Task | null
 }
 
+import dynamic from 'next/dynamic'
+
+const MapComponent = dynamic(() => import('./MapComponent'), { ssr: false })
+
 export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTaskFormProps) => {
     const [title, setTitle] = useState('')
     const [desc, setDesc] = useState('')
     const [budget, setBudget] = useState('')
+    const [lat, setLat] = useState<number | undefined>(undefined)
+    const [lng, setLng] = useState<number | undefined>(undefined)
 
     useEffect(() => {
         if (editingTask) {
             setTitle(editingTask.title)
             setDesc(editingTask.description || '')
             setBudget(editingTask.budgetMin?.toString() || '')
+            setLat(editingTask.latitude)
+            setLng(editingTask.longitude)
         }
     }, [editingTask])
 
@@ -32,7 +40,9 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
                 body: JSON.stringify({
                     title,
                     description: desc,
-                    budgetMin: budget ? Number(budget) : undefined
+                    budgetMin: budget ? Number(budget) : undefined,
+                    latitude: lat,
+                    longitude: lng
                 })
             })
 
@@ -49,7 +59,7 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
     }
 
     return (
-        <div className="card">
+        <div className="card" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 className="heading-2">{editingTask ? 'Edit Task' : 'Post a New Task'}</h2>
             <form onSubmit={handleSubmit} className="flex-col gap-4">
                 <div>
@@ -82,6 +92,19 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
                         onChange={e => setBudget(e.target.value)}
                     />
                 </div>
+
+                <div>
+                    <label className="label">Location (Click to pick)</label>
+                    <div style={{ height: '300px', width: '100%', marginBottom: '1rem' }}>
+                        <MapComponent
+                            selectedLocation={lat && lng ? { lat, lng } : null}
+                            onLocationSelect={(l, lg) => { setLat(l); setLng(lg) }}
+                            zoom={13}
+                        />
+                    </div>
+                    {lat && <p className="text-sm text-secondary">Selected: {lat.toFixed(4)}, {lng?.toFixed(4)}</p>}
+                </div>
+
                 <div className="flex gap-2">
                     <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
                         {editingTask ? 'Update Task' : 'Post Task'}

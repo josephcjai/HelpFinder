@@ -32,6 +32,9 @@ export class TaskEntity {
   @Column('float', { nullable: true })
   longitude?: number
 
+  @Column({ nullable: true })
+  address?: string
+
   @Column({ type: 'varchar', default: 'open' })
   status!: TaskStatus
 

@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
+import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Query, Request, UseGuards } from '@nestjs/common'
+import { ApiQuery, ApiTags } from '@nestjs/swagger'
 import { TaskEntity } from '../../entities/task.entity'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { CreateTaskDto } from './dto'
@@ -11,8 +11,16 @@ export class TasksController {
   constructor(private readonly tasks: TasksService) { }
 
   @Get()
-  async getTasks(): Promise<TaskEntity[]> {
-    return this.tasks.findAll()
+  @ApiQuery({ name: 'lat', required: false, type: Number })
+  @ApiQuery({ name: 'lng', required: false, type: Number })
+  @ApiQuery({ name: 'radius', required: false, type: Number })
+  async getTasks(
+    @Query('lat') lat?: number,
+    @Query('lng') lng?: number,
+    @Query('radius') radius?: number,
+  ): Promise<TaskEntity[]> {
+    console.log('GET /tasks params:', { lat, lng, radius })
+    return this.tasks.findAll(lat, lng, radius)
   }
 
   @UseGuards(JwtAuthGuard)

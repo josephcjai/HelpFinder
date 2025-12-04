@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Repository, Brackets } from 'typeorm'
 import { TaskEntity } from '../../entities/task.entity'
 import { BidEntity } from '../../entities/bid.entity'
 import { CreateTaskDto } from './dto'
@@ -12,17 +12,40 @@ export class TasksService {
     private readonly repo: Repository<TaskEntity>
   ) { }
 
-  async findAll(): Promise<TaskEntity[]> {
-    return this.repo.find({
-      order: { createdAt: 'DESC' },
-      relations: ['bids', 'bids.helper']
-    })
+  async findAll(lat?: number, lng?: number, radiusInKm: number = 50): Promise<TaskEntity[]> {
+    const query = this.repo.createQueryBuilder('task')
+      .leftJoinAndSelect('task.bids', 'bids')
+      .leftJoinAndSelect('bids.helper', 'helper')
+      .orderBy('task.createdAt', 'DESC')
+
+    if (lat !== undefined && lng !== undefined && !isNaN(Number(lat)) && !isNaN(Number(lng))) {
+      // Haversine formula for distance in km
+      // 6371 is Earth's radius in km
+      query.addSelect(
+        `(6371 * acos(cos(radians(:lat)) * cos(radians(task.latitude)) * cos(radians(task.longitude) - radians(:lng)) + sin(radians(:lat)) * sin(radians(task.latitude))))`,
+        'distance'
+      )
+        .where(new Brackets(qb => {
+          qb.where(
+            `(6371 * acos(cos(radians(:lat)) * cos(radians(task.latitude)) * cos(radians(task.longitude) - radians(:lng)) + sin(radians(:lat)) * sin(radians(task.latitude)))) <= :radius`
+          ).orWhere('task.latitude IS NULL')
+        }))
+        .setParameters({ lat, lng, radius: radiusInKm })
+        .orderBy('distance', 'ASC')
+    }
+
+    const results = await query.getMany()
+    console.log(`Found ${results.length} tasks.Lat / Lng provided: ${lat !== undefined && lng !== undefined} `)
+    return results
   }
 
   async create(requesterId: string, dto: CreateTaskDto): Promise<TaskEntity> {
     const task = this.repo.create({
       requesterId,
       ...dto,
+      latitude: dto.latitude,
+      longitude: dto.longitude,
+      address: dto.address,
     })
     return this.repo.save(task)
   }
