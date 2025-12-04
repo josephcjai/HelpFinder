@@ -263,7 +263,68 @@ export default function Home() {
           </div>
         )}
 
-        {viewMode === 'list' ? (
+        {viewMode === 'map' && (
+          <div className="mb-8" style={{ height: '600px', width: '100%' }}>
+            <MapComponent
+              tasks={displayedTasks}
+              zoom={13}
+              onLocationSelect={isSearchActive ? (lat, lng) => setSearchLocation({ lat, lng }) : undefined}
+              selectedLocation={searchLocation}
+              searchRadius={isSearchActive ? searchRadius : undefined}
+            />
+          </div>
+        )}
+
+        {isSearchActive ? (
+          <>
+            {/* Nearby Tasks */}
+            <div className="mb-8">
+              <h3 className="text-lg font-bold text-slate-700 mb-4 flex items-center gap-2">
+                <span className="text-2xl">📍</span> Nearby Tasks
+              </h3>
+              {displayedTasks.filter(t => t.latitude != null).length > 0 ? (
+                <div className="grid">
+                  {displayedTasks.filter(t => t.latitude != null).map(t => (
+                    <TaskCard
+                      key={t.id}
+                      task={t}
+                      user={user}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onRefresh={() => handleApplyFilter()}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-500 italic">No tasks found in this area.</p>
+              )}
+            </div>
+
+            {/* Other Tasks Divider */}
+            <div className="relative py-4 mb-8">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-300"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-slate-50 px-4 text-sm text-slate-500">Other Tasks (No Location Specified)</span>
+              </div>
+            </div>
+
+            {/* Other Tasks */}
+            <div className="grid">
+              {displayedTasks.filter(t => t.latitude == null).map(t => (
+                <TaskCard
+                  key={t.id}
+                  task={t}
+                  user={user}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onRefresh={() => handleApplyFilter()}
+                />
+              ))}
+            </div>
+          </>
+        ) : (
           <div className="grid">
             {displayedTasks.map(t => (
               <TaskCard
@@ -275,16 +336,6 @@ export default function Home() {
                 onRefresh={() => handleApplyFilter()}
               />
             ))}
-          </div>
-        ) : (
-          <div style={{ height: '600px', width: '100%' }}>
-            <MapComponent
-              tasks={displayedTasks}
-              zoom={13}
-              onLocationSelect={isSearchActive ? (lat, lng) => setSearchLocation({ lat, lng }) : undefined}
-              selectedLocation={searchLocation}
-              searchRadius={isSearchActive ? searchRadius : undefined}
-            />
           </div>
         )}
       </main>
