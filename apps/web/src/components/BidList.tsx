@@ -8,9 +8,10 @@ interface BidListProps {
     task: Task
     user: UserProfile
     onBidAccepted: () => void
+    onBidPlaced?: () => void
 }
 
-export const BidList = ({ task, user, onBidAccepted }: BidListProps) => {
+export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps) => {
     const [bids, setBids] = useState<Bid[]>([])
     const [bidAmount, setBidAmount] = useState('')
     const [bidMessage, setBidMessage] = useState('')
@@ -22,7 +23,7 @@ export const BidList = ({ task, user, onBidAccepted }: BidListProps) => {
 
     useEffect(() => {
         loadBids()
-    }, [task.id])
+    }, [task.id, task.bids])
 
     const loadBids = async () => {
         try {
@@ -48,6 +49,7 @@ export const BidList = ({ task, user, onBidAccepted }: BidListProps) => {
             setShowBidForm(false)
             setEditingBidId(null)
             loadBids()
+            onBidPlaced?.()
         } catch (e) {
             showToast('Failed to save bid', 'error')
         }
@@ -126,13 +128,18 @@ export const BidList = ({ task, user, onBidAccepted }: BidListProps) => {
     if (myBid && !showBidForm) {
         return (
             <div className="mt-4 border-t pt-4">
-                <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                    <div className="flex justify-between items-start mb-3">
+                <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+
+                    <div className="flex justify-between items-start mb-4 pl-2">
                         <div>
-                            <p className="text-sm font-bold text-blue-900 mb-1">Your Bid</p>
-                            <span className={`badge badge-${myBid.status === 'accepted' ? 'success' : 'secondary'}`}>
-                                {myBid.status.toUpperCase()}
-                            </span>
+                            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Your Bid</h4>
+                            <div className="flex items-center gap-2">
+                                <span className="font-bold text-3xl text-slate-800">${myBid.amount}</span>
+                                <span className={`badge badge-${myBid.status === 'accepted' ? 'success' : 'secondary'}`}>
+                                    {myBid.status.toUpperCase()}
+                                </span>
+                            </div>
                         </div>
                         {myBid.status === 'pending' && task.status === 'open' && (
                             <button onClick={() => handleEditBid(myBid)} className="btn btn-sm btn-secondary bg-white text-xs">
@@ -140,10 +147,12 @@ export const BidList = ({ task, user, onBidAccepted }: BidListProps) => {
                             </button>
                         )}
                     </div>
-                    <div className="flex items-baseline gap-3">
-                        <span className="font-bold text-2xl text-blue-700">${myBid.amount}</span>
-                        <span className="text-blue-600 text-sm">{myBid.message}</span>
-                    </div>
+
+                    {myBid.message && (
+                        <div className="mt-3 pl-2 text-slate-600 bg-slate-50 p-3 rounded-lg text-sm border border-slate-100">
+                            "{myBid.message}"
+                        </div>
+                    )}
                 </div>
             </div>
         )

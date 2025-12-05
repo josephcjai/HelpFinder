@@ -7,6 +7,9 @@ import { BidList } from '../../components/BidList'
 import { useTaskOperations } from '../../hooks/useTaskOperations'
 import dynamic from 'next/dynamic'
 import { CreateTaskForm } from '../../components/CreateTaskForm'
+import { placeBid } from '../../utils/api'
+import { useToast } from '../../components/ui/Toast'
+import { ConfirmModal } from '../../components/ui/ConfirmModal'
 
 const MapComponent = dynamic(() => import('../../components/MapComponent'), { ssr: false })
 
@@ -17,6 +20,8 @@ export default function TaskDetailsPage() {
     const [user, setUser] = useState<UserProfile | null>(null)
     const [loading, setLoading] = useState(true)
     const [isEditing, setIsEditing] = useState(false)
+    const [showAcceptConfirm, setShowAcceptConfirm] = useState(false)
+    const { showToast } = useToast()
 
     const loadTask = async () => {
         if (!id) return
@@ -56,6 +61,18 @@ export default function TaskDetailsPage() {
         onRefresh: loadTask,
         onDelete: () => router.push('/')
     })
+
+    const handleAcceptPrice = async () => {
+        if (!task || !task.budgetMin) return
+        try {
+            await placeBid(task.id, task.budgetMin, "I accept the offer price.")
+            showToast('Bid placed successfully!', 'success')
+            setShowAcceptConfirm(false)
+            loadTask()
+        } catch (e) {
+            showToast('Failed to place bid', 'error')
+        }
+    }
 
     if (loading) return <div className="flex justify-center p-12">Loading...</div>
     if (!task) return null
@@ -166,7 +183,7 @@ export default function TaskDetailsPage() {
                         {task.status === 'open' && user && (
                             <div className="card">
                                 <h2 className="heading-2 mb-4">Bids</h2>
-                                <BidList task={task} user={user} onBidAccepted={loadTask} />
+                                <BidList task={task} user={user} onBidAccepted={loadTask} onBidPlaced={loadTask} />
                             </div>
                         )}
                     </div>
@@ -181,6 +198,30 @@ export default function TaskDetailsPage() {
                                 <span className="text-xl text-secondary italic">Negotiable</span>
                             )}
                         </div>
+
+                        {/* Accept Price Option */}
+                        {task.status === 'open' && user && !isOwner && task.budgetMin && (
+                            <div className="card mt-4 bg-indigo-50 border-indigo-100">
+                                <h3 className="text-sm font-bold text-indigo-900 uppercase tracking-wider mb-2">Instant Accept</h3>
+                                {task.bids?.some(b => b.helperId === user.id) ? (
+                                    <div className="p-3 bg-white/50 rounded text-indigo-800 text-sm font-medium text-center">
+                                        You have already placed a bid on this task.
+                                    </div>
+                                ) : (
+                                    <>
+                                        <p className="text-sm text-indigo-700 mb-3">
+                                            Agree to the requested price of <strong>${task.budgetMin}</strong>?
+                                        </p>
+                                        <button
+                                            onClick={() => setShowAcceptConfirm(true)}
+                                            className="btn btn-primary w-full"
+                                        >
+                                            Accept Price: ${task.budgetMin}
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        )}
 
                         {/* Workflow Actions */}
                         {user && (
@@ -228,6 +269,15 @@ export default function TaskDetailsPage() {
                     </div>
                 </div>
             </main>
+
+            <ConfirmModal
+                isOpen={showAcceptConfirm}
+                onCancel={() => setShowAcceptConfirm(false)}
+                onConfirm={handleAcceptPrice}
+                title="Accept Offer Price"
+                message={`Are you sure you want to bid $${task?.budgetMin} for this task?`}
+                confirmText="Yes, Place Bid"
+            />
         </>
     )
 }
