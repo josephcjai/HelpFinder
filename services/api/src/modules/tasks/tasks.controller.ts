@@ -19,8 +19,13 @@ export class TasksController {
     @Query('lng') lng?: number,
     @Query('radius') radius?: number,
   ): Promise<TaskEntity[]> {
-    console.log('GET /tasks params:', { lat, lng, radius })
     return this.tasks.findAll(lat, lng, radius)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  async getTask(@Param('id') id: string): Promise<TaskEntity> {
+    return this.tasks.findOne(id)
   }
 
   @UseGuards(JwtAuthGuard)

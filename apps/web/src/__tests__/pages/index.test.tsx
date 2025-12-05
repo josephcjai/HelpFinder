@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react'
-import Home from './index'
+import Home from '../../pages/index'
 import '@testing-library/jest-dom'
-import { getToken, getUserProfile, getTasks } from '../utils/api'
+import { getToken, getUserProfile, getTasks } from '../../utils/api'
 
 // Mock the API utils
-jest.mock('../utils/api', () => ({
+jest.mock('../../utils/api', () => ({
     apiBase: 'http://localhost:4000',
     authenticatedFetch: jest.fn(),
     getToken: jest.fn(),

@@ -619,3 +619,7 @@ tr:last-child td {
 .p-6 {
   padding: 1.5rem;
 }
+
+.z-modal {
+  z-index: 99999 !important;
+}

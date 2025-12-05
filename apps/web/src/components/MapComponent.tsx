@@ -48,10 +48,30 @@ function LocationMarker({ onSelect, position }: { onSelect?: (lat: number, lng: 
         },
     })
 
+    useEffect(() => {
+        if (position) {
+            map.setView([position.lat, position.lng], map.getZoom())
+        }
+    }, [position, map])
+
     return position ? <Marker position={[position.lat, position.lng]} /> : null
 }
 
+function MapUpdater({ center, zoom }: { center: [number, number], zoom: number }) {
+    const map = useMapEvents({})
+    useEffect(() => {
+        map.setView(center, zoom)
+    }, [center, zoom, map])
+    return null
+}
+
+import { useRouter } from 'next/router'
+
+// ... imports
+
 export default function MapComponent({ tasks = [], onLocationSelect, selectedLocation, center = [51.505, -0.09], zoom = 13, searchRadius }: MapComponentProps) {
+    const router = useRouter()
+
     return (
         <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%', borderRadius: '1rem' }}>
             <TileLayer
@@ -64,14 +84,19 @@ export default function MapComponent({ tasks = [], onLocationSelect, selectedLoc
                 task.latitude && task.longitude && (
                     <Marker key={task.id} position={[task.latitude, task.longitude]}>
                         <Popup>
-                            <strong>{task.title}</strong> <br />
+                            <div
+                                onClick={() => router.push(`/tasks/${task.id}`)}
+                                className="cursor-pointer hover:text-primary hover:underline"
+                            >
+                                <strong>{task.title}</strong>
+                            </div>
                             ${task.budgetMin} - ${task.budgetMax}
                         </Popup>
                     </Marker>
                 )
             ))}
 
-            {/* Render Search Radius */}
+            {/* ... rest of component */}
             {selectedLocation && searchRadius && (
                 <Circle
                     center={[selectedLocation.lat, selectedLocation.lng]}
@@ -82,6 +107,7 @@ export default function MapComponent({ tasks = [], onLocationSelect, selectedLoc
 
             {/* Handle Location Selection */}
             <LocationMarker onSelect={onLocationSelect} position={selectedLocation} />
+            <MapUpdater center={center} zoom={zoom} />
         </MapContainer>
     )
 }

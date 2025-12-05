@@ -21,11 +21,14 @@ export interface Task {
     latitude?: number
     longitude?: number
     address?: string
+    country?: string
+    zipCode?: string
     status: TaskStatus
     completedAt?: Date
     createdAt: Date
     updatedAt: Date
     bids?: Bid[]
+    requester?: UserProfile
 }
 
 export type BidStatus = 'pending' | 'accepted' | 'rejected'

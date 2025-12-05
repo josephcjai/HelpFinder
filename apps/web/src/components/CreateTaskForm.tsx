@@ -16,16 +16,43 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
     const [title, setTitle] = useState('')
     const [desc, setDesc] = useState('')
     const [budget, setBudget] = useState('')
+    const [address, setAddress] = useState('')
+    const [country, setCountry] = useState('')
+    const [zipCode, setZipCode] = useState('')
     const [lat, setLat] = useState<number | undefined>(undefined)
     const [lng, setLng] = useState<number | undefined>(undefined)
+
+    const [mapCenter, setMapCenter] = useState<[number, number] | undefined>(undefined)
 
     useEffect(() => {
         if (editingTask) {
             setTitle(editingTask.title)
             setDesc(editingTask.description || '')
             setBudget(editingTask.budgetMin?.toString() || '')
+            setAddress(editingTask.address || '')
+            setCountry(editingTask.country || '')
+            setZipCode(editingTask.zipCode || '')
             setLat(editingTask.latitude)
             setLng(editingTask.longitude)
+
+            // Set map center to existing location if available
+            if (editingTask.latitude && editingTask.longitude) {
+                setMapCenter([editingTask.latitude, editingTask.longitude])
+            }
+            // Otherwise geocode if location is missing but address info exists
+            else {
+                const query = [editingTask.zipCode, editingTask.country].filter(Boolean).join(', ')
+                if (query) {
+                    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data && data[0]) {
+                                setMapCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)])
+                            }
+                        })
+                        .catch(console.error)
+                }
+            }
         }
     }, [editingTask])
 
@@ -41,6 +68,9 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
                     title,
                     description: desc,
                     budgetMin: budget ? Number(budget) : undefined,
+                    address,
+                    country,
+                    zipCode,
                     latitude: lat,
                     longitude: lng
                 })
@@ -60,53 +90,92 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
 
     return (
         <div className="card" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 className="heading-2">{editingTask ? 'Edit Task' : 'Post a New Task'}</h2>
-            <form onSubmit={handleSubmit} className="flex-col gap-4">
-                <div>
-                    <label className="label">Title</label>
-                    <input
-                        className="input"
-                        placeholder="e.g. Fix my sink"
-                        value={title}
-                        onChange={e => setTitle(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="label">Description</label>
-                    <textarea
-                        className="input"
-                        placeholder="Describe what you need help with..."
-                        value={desc}
-                        onChange={e => setDesc(e.target.value)}
-                        rows={3}
-                    />
-                </div>
-                <div>
-                    <label className="label">Budget (Optional)</label>
-                    <input
-                        type="number"
-                        className="input"
-                        placeholder="e.g. 50"
-                        value={budget}
-                        onChange={e => setBudget(e.target.value)}
-                    />
+            <h2 className="heading-2 mb-6">{editingTask ? 'Edit Task' : 'Post a New Task'}</h2>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                        <label className="label">Title</label>
+                        <input
+                            className="input"
+                            placeholder="e.g. Fix my sink"
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    <div className="md:col-span-2">
+                        <label className="label">Description</label>
+                        <textarea
+                            className="input"
+                            placeholder="Describe what you need help with..."
+                            value={desc}
+                            onChange={e => setDesc(e.target.value)}
+                            rows={4}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="label">Budget (Optional)</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary">$</span>
+                            <input
+                                type="number"
+                                className="input pl-8"
+                                placeholder="e.g. 50"
+                                value={budget}
+                                onChange={e => setBudget(e.target.value)}
+                                style={{ paddingLeft: '2rem' }}
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="label">Zip Code</label>
+                        <input
+                            className="input"
+                            placeholder="e.g. 10001"
+                            value={zipCode}
+                            onChange={e => setZipCode(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="md:col-span-2">
+                        <label className="label">Address</label>
+                        <input
+                            className="input"
+                            placeholder="e.g. 123 Main St"
+                            value={address}
+                            onChange={e => setAddress(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="md:col-span-2">
+                        <label className="label">Country</label>
+                        <input
+                            className="input"
+                            placeholder="e.g. USA"
+                            value={country}
+                            onChange={e => setCountry(e.target.value)}
+                        />
+                    </div>
                 </div>
 
                 <div>
-                    <label className="label">Location (Click to pick)</label>
-                    <div style={{ height: '300px', width: '100%', marginBottom: '1rem' }}>
+                    <label className="label mb-2">Location (Click to pick)</label>
+                    <div className="rounded-xl overflow-hidden border border-slate-200" style={{ height: '300px' }}>
                         <MapComponent
                             selectedLocation={lat && lng ? { lat, lng } : null}
                             onLocationSelect={(l, lg) => { setLat(l); setLng(lg) }}
                             zoom={13}
+                            center={mapCenter}
                         />
                     </div>
-                    {lat && <p className="text-sm text-secondary">Selected: {lat.toFixed(4)}, {lng?.toFixed(4)}</p>}
+                    {lat && <p className="text-sm text-secondary mt-2">Selected Coordinates: {lat.toFixed(4)}, {lng?.toFixed(4)}</p>}
                 </div>
 
-                <div className="flex gap-2">
-                    <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                <div className="flex gap-4 pt-4 border-t border-slate-100">
+                    <button type="submit" className="btn btn-primary flex-1">
                         {editingTask ? 'Update Task' : 'Post Task'}
                     </button>
                     <button

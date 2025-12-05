@@ -44,5 +44,15 @@ export class CreateTaskDto {
   @IsOptional()
   @IsString()
   address?: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  country?: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  zipCode?: string
 }
 

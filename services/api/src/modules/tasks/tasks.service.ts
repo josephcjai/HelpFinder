@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, Brackets } from 'typeorm'
 import { TaskEntity } from '../../entities/task.entity'
@@ -35,8 +35,18 @@ export class TasksService {
     }
 
     const results = await query.getMany()
-    console.log(`Found ${results.length} tasks.Lat / Lng provided: ${lat !== undefined && lng !== undefined} `)
     return results
+  }
+
+  async findOne(id: string): Promise<TaskEntity> {
+    const task = await this.repo.findOne({
+      where: { id },
+      relations: ['bids', 'bids.helper', 'requester']
+    })
+    if (!task) {
+      throw new NotFoundException(`Task with ID ${id} not found`)
+    }
+    return task
   }
 
   async create(requesterId: string, dto: CreateTaskDto): Promise<TaskEntity> {
@@ -46,6 +56,8 @@ export class TasksService {
       latitude: dto.latitude,
       longitude: dto.longitude,
       address: dto.address,
+      country: dto.country,
+      zipCode: dto.zipCode,
     })
     return this.repo.save(task)
   }
