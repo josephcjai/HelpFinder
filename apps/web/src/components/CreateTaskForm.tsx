@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { authenticatedFetch } from '../utils/api'
 import { Task } from '@helpfinder/shared'
+import { useToast } from './ui/Toast'
 
 interface CreateTaskFormProps {
     onTaskSaved: (task: Task, isEdit: boolean) => void
@@ -21,6 +22,7 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
     const [zipCode, setZipCode] = useState('')
     const [lat, setLat] = useState<number | undefined>(undefined)
     const [lng, setLng] = useState<number | undefined>(undefined)
+    const { showToast } = useToast()
 
     const [mapCenter, setMapCenter] = useState<[number, number] | undefined>(undefined)
 
@@ -78,18 +80,20 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
 
             if (res.ok) {
                 const savedTask = await res.json()
+                showToast(editingTask ? 'Task updated successfully' : 'Task created successfully', 'success')
                 onTaskSaved(savedTask, !!editingTask)
             } else {
-                alert('Failed to save task')
+                const text = await res.text()
+                showToast(`Failed to save task: ${text}`, 'error')
             }
         } catch (err) {
             console.error(err)
-            alert('Failed to save task')
+            showToast('Failed to save task', 'error')
         }
     }
 
     return (
-        <div className="card" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+        <div className="card scrollable-container">
             <h2 className="heading-2 mb-6">{editingTask ? 'Edit Task' : 'Post a New Task'}</h2>
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -121,11 +125,10 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary">$</span>
                             <input
                                 type="number"
-                                className="input pl-8"
+                                className="input input-with-icon"
                                 placeholder="e.g. 50"
                                 value={budget}
                                 onChange={e => setBudget(e.target.value)}
-                                style={{ paddingLeft: '2rem' }}
                             />
                         </div>
                     </div>
@@ -163,7 +166,7 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
 
                 <div>
                     <label className="label mb-2">Location (Click to pick)</label>
-                    <div className="rounded-xl overflow-hidden border border-slate-200" style={{ height: '300px' }}>
+                    <div className="rounded-xl overflow-hidden border border-slate-200 map-container">
                         <MapComponent
                             selectedLocation={lat && lng ? { lat, lng } : null}
                             onLocationSelect={(l, lg) => { setLat(l); setLng(lg) }}

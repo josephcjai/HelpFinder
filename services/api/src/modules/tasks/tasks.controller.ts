@@ -37,14 +37,7 @@ export class TasksController {
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
   async updateTask(@Param('id') id: string, @Body() body: Partial<CreateTaskDto>, @Request() req: any): Promise<TaskEntity> {
-    try {
-      return await this.tasks.update(id, req.user.id, body, req.user.role)
-    } catch (e: any) {
-      if (e.message === 'Forbidden') {
-        throw new ForbiddenException()
-      }
-      throw e
-    }
+    return this.tasks.update(id, req.user.id, body, req.user.role)
   }
 
   @UseGuards(JwtAuthGuard)

@@ -53,7 +53,7 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
             className="card card-hover flex flex-col h-full relative group cursor-pointer transition-all hover:shadow-md"
         >
             <div className="flex justify-between items-start mb-4">
-                <h3 className="heading-2 hover:text-primary transition-colors" style={{ fontSize: '1.25rem', lineHeight: '1.4' }}>
+                <h3 className="card-title hover:text-primary transition-colors">
                     {task.title}
                 </h3>
                 <span className={`badge badge-${task.status === 'open' ? 'success' : 'secondary'}`}>

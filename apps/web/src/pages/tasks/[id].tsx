@@ -150,7 +150,7 @@ export default function TaskDetailsPage() {
                                 </div>
                             )}
                             {task.latitude && task.longitude ? (
-                                <div style={{ height: '300px', width: '100%', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                                <div className="map-container">
                                     <MapComponent
                                         tasks={[task]}
                                         zoom={15}

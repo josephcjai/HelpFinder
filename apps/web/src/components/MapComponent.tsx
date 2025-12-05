@@ -69,7 +69,9 @@ import { useRouter } from 'next/router'
 
 // ... imports
 
-export default function MapComponent({ tasks = [], onLocationSelect, selectedLocation, center = [51.505, -0.09], zoom = 13, searchRadius }: MapComponentProps) {
+const DEFAULT_CENTER: [number, number] = [51.505, -0.09]
+
+export default function MapComponent({ tasks = [], onLocationSelect, selectedLocation, center = DEFAULT_CENTER, zoom = 13, searchRadius }: MapComponentProps) {
     const router = useRouter()
 
     return (

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, Brackets } from 'typeorm'
 import { TaskEntity } from '../../entities/task.entity'
@@ -65,10 +65,10 @@ export class TasksService {
   async update(id: string, userId: string, updates: Partial<TaskEntity>, userRole?: string): Promise<TaskEntity> {
     const task = await this.repo.findOneBy({ id })
     if (!task) {
-      throw new Error('Task not found')
+      throw new NotFoundException('Task not found')
     }
     if (task.requesterId !== userId && userRole !== 'admin') {
-      throw new Error('Forbidden')
+      throw new ForbiddenException('You are not authorized to update this task')
     }
     Object.assign(task, updates)
     return this.repo.save(task)
@@ -78,20 +78,20 @@ export class TasksService {
     const task = await this.repo.findOneBy({ id })
     if (!task) return // Idempotent
     if (task.requesterId !== userId && !isAdmin) {
-      throw new Error('Unauthorized')
+      throw new ForbiddenException('You are not authorized to delete this task')
     }
     await this.repo.delete(id)
   }
 
   async requestCompletion(taskId: string, userId: string): Promise<TaskEntity> {
     const task = await this.repo.findOne({ where: { id: taskId }, relations: ['bids', 'bids.helper'] })
-    if (!task) throw new Error('Task not found')
+    if (!task) throw new NotFoundException('Task not found')
 
     // Find the accepted bid to verify the user is the helper
     const acceptedBid = task.bids?.find(b => b.status === 'accepted')
 
     if (!acceptedBid) {
-      throw new Error('No accepted bid found')
+      throw new BadRequestException('No accepted bid found for this task')
     }
 
     // Defensive check: Ensure helper is loaded
@@ -109,7 +109,7 @@ export class TasksService {
     }
 
     if (acceptedBid.helper.id !== userId) {
-      throw new Error('Only the assigned helper can request completion')
+      throw new ForbiddenException('Only the assigned helper can request completion')
     }
 
     task.status = 'review_pending'
@@ -118,8 +118,8 @@ export class TasksService {
 
   async approveCompletion(taskId: string, userId: string): Promise<TaskEntity> {
     const task = await this.repo.findOneBy({ id: taskId })
-    if (!task) throw new Error('Task not found')
-    if (task.requesterId !== userId) throw new Error('Unauthorized')
+    if (!task) throw new NotFoundException('Task not found')
+    if (task.requesterId !== userId) throw new ForbiddenException('Only the requester can approve completion')
 
     task.status = 'completed'
     task.completedAt = new Date()
@@ -128,8 +128,8 @@ export class TasksService {
 
   async rejectCompletion(taskId: string, userId: string): Promise<TaskEntity> {
     const task = await this.repo.findOneBy({ id: taskId })
-    if (!task) throw new Error('Task not found')
-    if (task.requesterId !== userId) throw new Error('Unauthorized')
+    if (!task) throw new NotFoundException('Task not found')
+    if (task.requesterId !== userId) throw new ForbiddenException('Only the requester can reject completion')
 
     task.status = 'in_progress'
     return this.repo.save(task)
@@ -137,16 +137,16 @@ export class TasksService {
 
   async reopenTask(taskId: string, userId: string): Promise<TaskEntity> {
     const task = await this.repo.findOneBy({ id: taskId })
-    if (!task) throw new Error('Task not found')
-    if (task.requesterId !== userId) throw new Error('Unauthorized')
-    if (task.status !== 'completed') throw new Error('Task is not completed')
+    if (!task) throw new NotFoundException('Task not found')
+    if (task.requesterId !== userId) throw new ForbiddenException('Only the requester can reopen the task')
+    if (task.status !== 'completed') throw new BadRequestException('Task is not in completed status')
 
     // Check if within 2 weeks (14 days)
     const twoWeeksAgo = new Date()
     twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
 
     if (task.completedAt && task.completedAt < twoWeeksAgo) {
-      throw new Error('Cannot reopen task after 14 days')
+      throw new BadRequestException('Cannot reopen task after 14 days of completion')
     }
 
     task.status = 'in_progress'
