@@ -3,19 +3,23 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, Brackets } from 'typeorm'
 import { TaskEntity } from '../../entities/task.entity'
 import { BidEntity } from '../../entities/bid.entity'
+import { ContractEntity } from '../../entities/contract.entity'
 import { CreateTaskDto } from './dto'
 
 @Injectable()
 export class TasksService {
   constructor(
     @InjectRepository(TaskEntity)
-    private readonly repo: Repository<TaskEntity>
+    private readonly repo: Repository<TaskEntity>,
+    @InjectRepository(ContractEntity)
+    private readonly contractRepo: Repository<ContractEntity>
   ) { }
 
-  async findAll(lat?: number, lng?: number, radiusInKm: number = 50): Promise<TaskEntity[]> {
+  async findAll(lat?: number, lng?: number, radiusInKm: number = 50, category?: string): Promise<TaskEntity[]> {
     const query = this.repo.createQueryBuilder('task')
       .leftJoinAndSelect('task.bids', 'bids')
       .leftJoinAndSelect('bids.helper', 'helper')
+      .leftJoinAndSelect('task.category', 'category') // Join category
       .orderBy('task.createdAt', 'DESC')
 
     if (lat !== undefined && lng !== undefined && !isNaN(Number(lat)) && !isNaN(Number(lng))) {
@@ -34,6 +38,13 @@ export class TasksService {
         .orderBy('distance', 'ASC')
     }
 
+    if (category) {
+      query.andWhere(new Brackets(qb => {
+        qb.where('category.id = :category', { category })
+          .orWhere('task.categoryId IS NULL')
+      }))
+    }
+
     const results = await query.getMany()
     return results
   }
@@ -41,7 +52,7 @@ export class TasksService {
   async findOne(id: string): Promise<TaskEntity> {
     const task = await this.repo.findOne({
       where: { id },
-      relations: ['bids', 'bids.helper', 'requester']
+      relations: ['bids', 'bids.helper', 'requester', 'category']
     })
     if (!task) {
       throw new NotFoundException(`Task with ID ${id} not found`)
@@ -53,6 +64,7 @@ export class TasksService {
     const task = this.repo.create({
       requesterId,
       ...dto,
+      categoryId: dto.categoryId, // Map categoryId
       latitude: dto.latitude,
       longitude: dto.longitude,
       address: dto.address,
@@ -113,7 +125,16 @@ export class TasksService {
     }
 
     task.status = 'review_pending'
-    return this.repo.save(task)
+    await this.repo.save(task)
+
+    // Update Contract Status
+    const contract = await this.contractRepo.findOne({ where: { taskId: task.id, helperId: userId } })
+    if (contract) {
+      contract.status = 'delivered'
+      await this.contractRepo.save(contract)
+    }
+
+    return task
   }
 
   async approveCompletion(taskId: string, userId: string): Promise<TaskEntity> {
@@ -123,7 +144,16 @@ export class TasksService {
 
     task.status = 'completed'
     task.completedAt = new Date()
-    return this.repo.save(task)
+    await this.repo.save(task)
+
+    // Update Contract Status
+    const contract = await this.contractRepo.findOne({ where: { taskId: task.id } })
+    if (contract) {
+      contract.status = 'approved'
+      await this.contractRepo.save(contract)
+    }
+
+    return task
   }
 
   async rejectCompletion(taskId: string, userId: string): Promise<TaskEntity> {
@@ -132,7 +162,16 @@ export class TasksService {
     if (task.requesterId !== userId) throw new ForbiddenException('Only the requester can reject completion')
 
     task.status = 'in_progress'
-    return this.repo.save(task)
+    await this.repo.save(task)
+
+    // Update Contract Status
+    const contract = await this.contractRepo.findOne({ where: { taskId: task.id } })
+    if (contract) {
+      contract.status = 'started'
+      await this.contractRepo.save(contract)
+    }
+
+    return task
   }
 
   async reopenTask(taskId: string, userId: string): Promise<TaskEntity> {
@@ -151,6 +190,15 @@ export class TasksService {
 
     task.status = 'in_progress'
     task.completedAt = undefined
-    return this.repo.save(task)
+    await this.repo.save(task)
+
+    // Update Contract Status
+    const contract = await this.contractRepo.findOne({ where: { taskId: task.id } })
+    if (contract) {
+      contract.status = 'started'
+      await this.contractRepo.save(contract)
+    }
+
+    return task
   }
 }

@@ -8,6 +8,13 @@ export interface UserProfile {
     isSuperAdmin?: boolean
 }
 
+export interface Category {
+    id: string
+    name: string
+    createdAt: Date
+    updatedAt: Date
+}
+
 export type TaskStatus = 'open' | 'in_progress' | 'review_pending' | 'completed' | 'cancelled'
 
 export interface Task {
@@ -15,7 +22,8 @@ export interface Task {
     requesterId: string
     title: string
     description?: string
-    category?: string
+    categoryId?: string
+    category?: Category
     budgetMin?: number
     budgetMax?: number
     latitude?: number

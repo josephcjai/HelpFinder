@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { authenticatedFetch } from '../utils/api'
-import { Task } from '@helpfinder/shared'
+import { authenticatedFetch, getCategories } from '../utils/api'
+import { Task, Category } from '@helpfinder/shared'
 import { useToast } from './ui/Toast'
 
 interface CreateTaskFormProps {
@@ -16,20 +16,24 @@ const MapComponent = dynamic(() => import('./MapComponent'), { ssr: false })
 export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTaskFormProps) => {
     const [title, setTitle] = useState('')
     const [desc, setDesc] = useState('')
+    const [categoryId, setCategoryId] = useState('')
     const [budget, setBudget] = useState('')
     const [address, setAddress] = useState('')
     const [country, setCountry] = useState('')
     const [zipCode, setZipCode] = useState('')
     const [lat, setLat] = useState<number | undefined>(undefined)
     const [lng, setLng] = useState<number | undefined>(undefined)
+    const [categories, setCategories] = useState<Category[]>([])
     const { showToast } = useToast()
 
     const [mapCenter, setMapCenter] = useState<[number, number] | undefined>(undefined)
 
     useEffect(() => {
+        loadCategories()
         if (editingTask) {
             setTitle(editingTask.title)
             setDesc(editingTask.description || '')
+            setCategoryId(editingTask.categoryId || '')
             setBudget(editingTask.budgetMin?.toString() || '')
             setAddress(editingTask.address || '')
             setCountry(editingTask.country || '')
@@ -58,6 +62,15 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
         }
     }, [editingTask])
 
+    const loadCategories = async () => {
+        try {
+            const data = await getCategories()
+            setCategories(data)
+        } catch (e) {
+            console.error('Failed to load categories')
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         try {
@@ -69,6 +82,7 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
                 body: JSON.stringify({
                     title,
                     description: desc,
+                    categoryId: categoryId || undefined,
                     budgetMin: budget ? Number(budget) : undefined,
                     address,
                     country,
@@ -117,6 +131,20 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
                             onChange={e => setDesc(e.target.value)}
                             rows={4}
                         />
+                    </div>
+
+                    <div className="md:col-span-2">
+                        <label className="label">Category (Optional)</label>
+                        <select
+                            className="input"
+                            value={categoryId}
+                            onChange={e => setCategoryId(e.target.value)}
+                        >
+                            <option value="">Select a category...</option>
+                            {categories.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
+                        </select>
                     </div>
 
                     <div>

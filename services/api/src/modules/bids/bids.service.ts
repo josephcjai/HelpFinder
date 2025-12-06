@@ -4,6 +4,7 @@ import { Repository } from 'typeorm'
 import { BidEntity } from '../../entities/bid.entity'
 import { TaskEntity } from '../../entities/task.entity'
 import { UserEntity } from '../../entities/user.entity'
+import { ContractEntity } from '../../entities/contract.entity'
 
 @Injectable()
 export class BidsService {
@@ -12,6 +13,8 @@ export class BidsService {
     private readonly bidRepo: Repository<BidEntity>,
     @InjectRepository(TaskEntity)
     private readonly taskRepo: Repository<TaskEntity>,
+    @InjectRepository(ContractEntity)
+    private readonly contractRepo: Repository<ContractEntity>,
   ) { }
 
   async placeBid(taskId: string, helper: UserEntity, amount: number, message?: string): Promise<BidEntity> {
@@ -68,7 +71,7 @@ export class BidsService {
   async acceptBid(bidId: string, requesterId: string): Promise<BidEntity> {
     const bid = await this.bidRepo.findOne({
       where: { id: bidId },
-      relations: ['task', 'task.requester']
+      relations: ['task', 'task.requester', 'helper']
     })
     if (!bid) throw new NotFoundException('Bid not found')
 
@@ -84,8 +87,14 @@ export class BidsService {
     bid.task.status = 'in_progress'
     await this.taskRepo.save(bid.task)
 
-    // 3. Reject other bids (optional, but good practice)
-    // For simplicity, we'll leave them as pending or handle later
+    // 3. Create Contract
+    const contract = this.contractRepo.create({
+      taskId: bid.task.id,
+      helperId: bid.helper.id,
+      agreedAmount: bid.amount,
+      status: 'pending'
+    })
+    await this.contractRepo.save(contract)
 
     return bid
   }

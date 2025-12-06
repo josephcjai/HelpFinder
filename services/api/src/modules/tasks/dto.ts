@@ -16,7 +16,7 @@ export class CreateTaskDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  category?: string
+  categoryId?: string
 
   @ApiProperty({ required: false })
   @IsOptional()

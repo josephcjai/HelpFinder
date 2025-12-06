@@ -1,4 +1,4 @@
-import { Task, Bid } from '@helpfinder/shared'
+import { Task, Bid, Category } from '@helpfinder/shared'
 
 export const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'
 
@@ -50,11 +50,12 @@ export const getUserProfile = async () => {
     return null
 }
 
-export const getTasks = async (lat?: number, lng?: number, radius?: number): Promise<Task[]> => {
+export const getTasks = async (lat?: number, lng?: number, radius?: number, category?: string): Promise<Task[]> => {
     const params = new URLSearchParams()
     if (lat !== undefined) params.append('lat', lat.toString())
     if (lng !== undefined) params.append('lng', lng.toString())
     if (radius !== undefined) params.append('radius', radius.toString())
+    if (category) params.append('category', category)
 
     const res = await authenticatedFetch(`/tasks?${params.toString()}`)
     if (res.ok) {
@@ -184,4 +185,36 @@ export const updateUserRole = async (id: string, role: string) => {
         method: 'PATCH',
         body: JSON.stringify({ role })
     })
+}
+
+// Categories
+export const getCategories = async (): Promise<Category[]> => {
+    const res = await authenticatedFetch(`/categories`)
+    if (res.ok) return res.json()
+    throw new Error('Failed to fetch categories')
+}
+
+export const createCategory = async (name: string): Promise<Category> => {
+    const res = await authenticatedFetch(`/categories`, {
+        method: 'POST',
+        body: JSON.stringify({ name })
+    })
+    if (res.ok) return res.json()
+    throw new Error('Failed to create category')
+}
+
+export const updateCategory = async (id: string, name: string): Promise<Category> => {
+    const res = await authenticatedFetch(`/categories/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ name })
+    })
+    if (res.ok) return res.json()
+    throw new Error('Failed to update category')
+}
+
+export const deleteCategory = async (id: string): Promise<void> => {
+    const res = await authenticatedFetch(`/categories/${id}`, {
+        method: 'DELETE'
+    })
+    if (!res.ok) throw new Error('Failed to delete category')
 }

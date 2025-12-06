@@ -78,6 +78,14 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
                     </span>
                 </div>
 
+                {task.category && (
+                    <div className="mb-2">
+                        <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                            {task.category.name}
+                        </span>
+                    </div>
+                )}
+
                 <p className="text-secondary mb-6 flex-grow">{task.description || 'No description provided.'}</p>
 
                 <div className="flex justify-between items-end mt-auto pt-4 border-t border-slate-100 w-full">

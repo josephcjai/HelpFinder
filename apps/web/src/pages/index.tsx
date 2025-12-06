@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getTasks, getUserProfile, removeToken, getToken } from '../utils/api'
-import { Task, UserProfile } from '@helpfinder/shared'
+import { getTasks, getUserProfile, removeToken, getToken, getCategories } from '../utils/api'
+import { Task, UserProfile, Category } from '@helpfinder/shared'
 import { Navbar } from '../components/Navbar'
 import { CreateTaskForm } from '../components/CreateTaskForm'
 import { TaskCard } from '../components/TaskCard'
@@ -13,6 +13,7 @@ export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<UserProfile | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
 
   // New/Edit Task State
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -26,6 +27,7 @@ export default function Home() {
   const [isSearchActive, setIsSearchActive] = useState(false)
   const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [searchRadius, setSearchRadius] = useState(10)
+  const [selectedCategory, setSelectedCategory] = useState('')
 
   useEffect(() => {
     const init = async () => {
@@ -33,15 +35,25 @@ export default function Home() {
         const profile = await getUserProfile()
         setUser(profile)
       }
+      loadCategories()
       loadTasks()
     }
     init()
   }, [])
 
-  const loadTasks = async (lat?: number, lng?: number, radius?: number) => {
+  const loadCategories = async () => {
+    try {
+      const data = await getCategories()
+      setCategories(data)
+    } catch (e) {
+      console.error('Failed to load categories')
+    }
+  }
+
+  const loadTasks = async (lat?: number, lng?: number, radius?: number, category?: string) => {
     try {
       setLoading(true)
-      const data = await getTasks(lat, lng, radius)
+      const data = await getTasks(lat, lng, radius, category)
       setTasks(data)
     } catch (e) {
       setTasks([])
@@ -52,9 +64,9 @@ export default function Home() {
 
   const handleApplyFilter = () => {
     if (isSearchActive && searchLocation) {
-      loadTasks(searchLocation.lat, searchLocation.lng, searchRadius)
+      loadTasks(searchLocation.lat, searchLocation.lng, searchRadius, selectedCategory)
     } else {
-      loadTasks()
+      loadTasks(undefined, undefined, undefined, selectedCategory)
     }
   }
 
@@ -147,21 +159,43 @@ export default function Home() {
 
         {/* Location Filter Section */}
         <div className="mb-6 p-4 bg-white rounded-xl shadow-sm border border-slate-100">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-4 flex-wrap">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={isSearchActive}
                 onChange={(e) => {
                   setIsSearchActive(e.target.checked)
-                  if (!e.target.checked) {
-                    loadTasks() // Reset if unchecked
+                  if (!e.target.checked && !selectedCategory) {
+                    loadTasks() // Reset if unchecked and no category
                   }
                 }}
                 className="w-5 h-5 text-primary rounded focus:ring-primary"
               />
               <span className="font-bold text-slate-700">Filter by Location</span>
             </label>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-slate-700">Category:</span>
+              <select
+                className="input py-1 px-3 text-sm w-auto"
+                value={selectedCategory}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value)
+                  // Auto-apply filter when category changes
+                  if (isSearchActive && searchLocation) {
+                    loadTasks(searchLocation.lat, searchLocation.lng, searchRadius, e.target.value)
+                  } else {
+                    loadTasks(undefined, undefined, undefined, e.target.value)
+                  }
+                }}
+              >
+                <option value="">All Categories</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {isSearchActive && (
@@ -275,16 +309,24 @@ export default function Home() {
           </div>
         )}
 
-        {isSearchActive ? (
+        {isSearchActive || selectedCategory ? (
           <>
-            {/* Nearby Tasks */}
+            {/* Primary Matches */}
             <div className="mb-8">
               <h3 className="text-lg font-bold text-slate-700 mb-4 flex items-center gap-2">
-                <span className="text-2xl">📍</span> Nearby Tasks
+                <span className="text-2xl">🎯</span> Matching Tasks
               </h3>
-              {displayedTasks.filter(t => t.latitude != null).length > 0 ? (
+              {displayedTasks.filter(t => {
+                const matchesLoc = !isSearchActive || t.latitude != null
+                const matchesCat = !selectedCategory || t.categoryId === selectedCategory
+                return matchesLoc && matchesCat
+              }).length > 0 ? (
                 <div className="grid">
-                  {displayedTasks.filter(t => t.latitude != null).map(t => (
+                  {displayedTasks.filter(t => {
+                    const matchesLoc = !isSearchActive || t.latitude != null
+                    const matchesCat = !selectedCategory || t.categoryId === selectedCategory
+                    return matchesLoc && matchesCat
+                  }).map(t => (
                     <TaskCard
                       key={t.id}
                       task={t}
@@ -296,7 +338,7 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <p className="text-slate-500 italic">No tasks found in this area.</p>
+                <p className="text-slate-500 italic">No exact matches found.</p>
               )}
             </div>
 
@@ -306,13 +348,22 @@ export default function Home() {
                 <div className="w-full border-t border-slate-300"></div>
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-slate-50 px-4 text-sm text-slate-500">Other Tasks (No Location Specified)</span>
+                <span className="bg-slate-50 px-4 text-sm text-slate-500">
+                  Other Tasks ({[
+                    isSearchActive && 'No Location',
+                    selectedCategory && 'Uncategorized'
+                  ].filter(Boolean).join(' / ')})
+                </span>
               </div>
             </div>
 
             {/* Other Tasks */}
             <div className="grid">
-              {displayedTasks.filter(t => t.latitude == null).map(t => (
+              {displayedTasks.filter(t => {
+                const matchesLoc = !isSearchActive || t.latitude != null
+                const matchesCat = !selectedCategory || t.categoryId === selectedCategory
+                return !(matchesLoc && matchesCat)
+              }).map(t => (
                 <TaskCard
                   key={t.id}
                   task={t}

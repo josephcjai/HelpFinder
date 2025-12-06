@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { getUsers, deleteUser, updateUserRole, getUserProfile } from '../utils/api'
 import { UserProfile } from '@helpfinder/shared'
+import { AdminCategoryManager } from '../components/AdminCategoryManager'
 
 type User = {
     id: string
@@ -106,7 +107,11 @@ export default function AdminDashboard() {
                         </table>
                     </div>
                 )}
-            </main>
+
+                <div className="mt-12">
+                    <AdminCategoryManager />
+                </div>
+            </main >
         </>
     )
 }

@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 import { UserEntity } from './user.entity'
 import { BidEntity } from './bid.entity'
+import { CategoryEntity } from './category.entity'
 import { TaskStatus } from '@helpfinder/shared'
 
 @Entity('tasks')
@@ -18,7 +19,10 @@ export class TaskEntity {
   description?: string
 
   @Column({ nullable: true })
-  category?: string
+  categoryId?: string
+
+  @ManyToOne(() => CategoryEntity, (category) => category.tasks, { onDelete: 'SET NULL', nullable: true })
+  category?: CategoryEntity
 
   @Column('float', { nullable: true })
   budgetMin?: number

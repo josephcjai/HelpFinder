@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { UsersModule } from './users/users.module'
 import { TasksModule } from './tasks/tasks.module'
+import { CategoriesModule } from './categories/categories.module'
 import { BidsModule } from './bids/bids.module'
 import { ContractsModule } from './contracts/contracts.module'
 import { AuthModule } from './auth/auth.module'
@@ -21,6 +22,7 @@ import { AuthModule } from './auth/auth.module'
       }),
     }),
     UsersModule,
+    CategoriesModule,
     TasksModule,
     BidsModule,
     ContractsModule,
