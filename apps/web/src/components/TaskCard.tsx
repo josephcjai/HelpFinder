@@ -6,7 +6,7 @@ import { useModal } from './ui/ModalProvider'
 import { useTaskOperations } from '../hooks/useTaskOperations'
 import Link from 'next/link'
 import { useState } from 'react'
-import { placeBid } from '../utils/api'
+import { placeBid, startTask } from '../utils/api'
 import { ConfirmModal } from './ui/ConfirmModal'
 
 interface TaskCardProps {
@@ -29,6 +29,7 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
 
     const {
         handleDelete,
+        handleStartTask,
         handleRequestCompletion,
         handleApproveCompletion,
         handleRejectCompletion,
@@ -98,7 +99,7 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
                         )}
                     </div>
 
-                    {user && (user.id === task.requesterId || user.role === 'admin') && (
+                    {user && (user.id === task.requesterId || user.role === 'admin') && task.status === 'open' && (
                         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
                                 onClick={(e) => { e.stopPropagation(); onEdit(task) }}
@@ -139,6 +140,26 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
                                 Accept Price: ${task.budgetMin}
                             </button>
                         )}
+                    </div>
+                )}
+
+                {/* Helper Actions */}
+                {task.status === 'accepted' && user && task.bids?.some(b => b.helperId === user.id && b.status === 'accepted') && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            handleStartTask(task)
+                        }}
+                        className="btn btn-primary w-full mt-4"
+                    >
+                        Start Task
+                    </button>
+                )}
+
+                {/* Requester Status Message */}
+                {task.status === 'accepted' && user && task.requesterId === user.id && (
+                    <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 rounded-lg text-sm text-center">
+                        Waiting for helper to start the task...
                     </div>
                 )}
 

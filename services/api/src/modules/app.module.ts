@@ -6,6 +6,7 @@ import { TasksModule } from './tasks/tasks.module'
 import { CategoriesModule } from './categories/categories.module'
 import { BidsModule } from './bids/bids.module'
 import { ContractsModule } from './contracts/contracts.module'
+import { NotificationsModule } from './notifications/notifications.module'
 import { AuthModule } from './auth/auth.module'
 
 @Module({
@@ -26,6 +27,7 @@ import { AuthModule } from './auth/auth.module'
     TasksModule,
     BidsModule,
     ContractsModule,
+    NotificationsModule,
     AuthModule,
   ],
 })

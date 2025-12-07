@@ -1,5 +1,5 @@
 import { Task } from '@helpfinder/shared'
-import { requestCompletion, approveCompletion, rejectCompletion, reopenTask, authenticatedFetch } from '../utils/api'
+import { requestCompletion, approveCompletion, rejectCompletion, reopenTask, authenticatedFetch, startTask } from '../utils/api'
 import { useToast } from '../components/ui/Toast'
 import { useModal } from '../components/ui/ModalProvider'
 
@@ -31,6 +31,23 @@ export const useTaskOperations = ({ onRefresh, onDelete }: UseTaskOperationsProp
                 }
             },
             isDangerous: true
+        })
+    }
+
+    const handleStartTask = (task: Task) => {
+        showConfirmation({
+            title: `Start "${task.title}"?`,
+            message: 'This will mark the task as In Progress. The requester will no longer be able to edit the task details.',
+            confirmText: 'Start Task',
+            onConfirm: async () => {
+                try {
+                    await startTask(task.id)
+                    showToast('Task started successfully', 'success')
+                    onRefresh()
+                } catch (e) {
+                    showToast('Failed to start task', 'error')
+                }
+            }
         })
     }
 
@@ -101,6 +118,7 @@ export const useTaskOperations = ({ onRefresh, onDelete }: UseTaskOperationsProp
 
     return {
         handleDelete,
+        handleStartTask,
         handleRequestCompletion,
         handleApproveCompletion,
         handleRejectCompletion,

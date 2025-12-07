@@ -46,12 +46,29 @@ export class BidsService {
       throw new ForbiddenException('You can only edit your own bids')
     }
 
-    if (bid.task.status !== 'open') {
+    if (bid.task.status !== 'open' && bid.status !== 'accepted') {
       throw new ForbiddenException('Cannot edit bid when task is not open')
     }
 
-    if (bid.status !== 'pending') {
-      throw new ForbiddenException('Cannot edit bid that is already accepted or rejected')
+    if (bid.status !== 'pending' && bid.status !== 'accepted') {
+      throw new ForbiddenException('Cannot edit bid that is rejected')
+    }
+
+    // If bid was accepted, we need to reset the flow (Renegotiation)
+    if (bid.status === 'accepted') {
+      // 1. Cancel Contract
+      const contract = await this.contractRepo.findOne({ where: { taskId: bid.task.id, helperId: userId } })
+      if (contract) {
+        contract.status = 'cancelled'
+        await this.contractRepo.save(contract)
+      }
+
+      // 2. Reopen Task
+      bid.task.status = 'open'
+      await this.taskRepo.save(bid.task)
+
+      // 3. Reset Bid Status
+      bid.status = 'pending'
     }
 
     bid.amount = amount
@@ -84,7 +101,7 @@ export class BidsService {
     await this.bidRepo.save(bid)
 
     // 2. Update Task Status
-    bid.task.status = 'in_progress'
+    bid.task.status = 'accepted'
     await this.taskRepo.save(bid.task)
 
     // 3. Create Contract
@@ -97,5 +114,30 @@ export class BidsService {
     await this.contractRepo.save(contract)
 
     return bid
+  }
+
+  async withdrawBid(bidId: string, userId: string): Promise<void> {
+    const bid = await this.bidRepo.findOne({ where: { id: bidId }, relations: ['helper', 'task'] })
+    if (!bid) throw new NotFoundException('Bid not found')
+
+    if (bid.helper.id !== userId) {
+      throw new ForbiddenException('You can only withdraw your own bids')
+    }
+
+    if (bid.status === 'accepted') {
+      // 1. Cancel Contract
+      const contract = await this.contractRepo.findOne({ where: { taskId: bid.task.id, helperId: userId } })
+      if (contract) {
+        contract.status = 'cancelled'
+        await this.contractRepo.save(contract)
+      }
+
+      // 2. Reopen Task
+      bid.task.status = 'open'
+      await this.taskRepo.save(bid.task)
+    }
+
+    // Delete the bid or mark as cancelled? Deleting for now as per "withdraw"
+    await this.bidRepo.remove(bid)
   }
 }

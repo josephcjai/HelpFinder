@@ -114,6 +114,16 @@ export const getBids = async (taskId: string): Promise<Bid[]> => {
     return []
 }
 
+export const withdrawBid = async (bidId: string) => {
+    const res = await authenticatedFetch(`/bids/${bidId}`, {
+        method: 'DELETE'
+    })
+    if (res.ok) {
+        return res.json()
+    }
+    throw new Error('Failed to withdraw bid')
+}
+
 export const acceptBid = async (bidId: string) => {
     const res = await authenticatedFetch(`/bids/${bidId}/accept`, {
         method: 'POST'
@@ -122,6 +132,16 @@ export const acceptBid = async (bidId: string) => {
         return res.json()
     }
     throw new Error('Failed to accept bid')
+}
+
+export const startTask = async (taskId: string) => {
+    const res = await authenticatedFetch(`/tasks/${taskId}/start`, {
+        method: 'POST'
+    })
+    if (res.ok) {
+        return res.json()
+    }
+    throw new Error('Failed to start task')
 }
 
 export const requestCompletion = async (taskId: string) => {

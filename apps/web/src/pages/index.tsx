@@ -5,6 +5,7 @@ import { Navbar } from '../components/Navbar'
 import { CreateTaskForm } from '../components/CreateTaskForm'
 import { TaskCard } from '../components/TaskCard'
 
+import Link from 'next/link'
 import dynamic from 'next/dynamic'
 
 const MapComponent = dynamic(() => import('../components/MapComponent'), { ssr: false })
@@ -114,8 +115,8 @@ export default function Home() {
                 Connect with trusted neighbors for tasks big and small. From gardening to moving, we've got you covered.
               </p>
               <div className="flex gap-4">
-                <a href="/register" className="btn btn-primary" style={{ padding: '0.75rem 2rem', fontSize: '1.1rem' }}>Get Started</a>
-                <a href="/login" className="btn btn-secondary" style={{ padding: '0.75rem 2rem', fontSize: '1.1rem' }}>Login</a>
+                <Link href="/register" className="btn btn-primary" style={{ padding: '0.75rem 2rem', fontSize: '1.1rem' }}>Get Started</Link>
+                <Link href="/login" className="btn btn-secondary" style={{ padding: '0.75rem 2rem', fontSize: '1.1rem' }}>Login</Link>
               </div>
             </div>
             <div className="hero-image hidden-mobile">

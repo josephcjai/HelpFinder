@@ -4,9 +4,10 @@ import { ContractEntity } from '../../entities/contract.entity'
 import { TaskEntity } from '../../entities/task.entity'
 import { TasksController } from './tasks.controller'
 import { TasksService } from './tasks.service'
+import { NotificationsModule } from '../notifications/notifications.module'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TaskEntity, ContractEntity])],
+  imports: [TypeOrmModule.forFeature([TaskEntity, ContractEntity]), NotificationsModule],
   controllers: [TasksController],
   providers: [TasksService],
   exports: [TasksService]

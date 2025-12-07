@@ -4,6 +4,7 @@ import { Repository, Brackets } from 'typeorm'
 import { TaskEntity } from '../../entities/task.entity'
 import { BidEntity } from '../../entities/bid.entity'
 import { ContractEntity } from '../../entities/contract.entity'
+import { NotificationsService } from '../notifications/notifications.service'
 import { CreateTaskDto } from './dto'
 
 @Injectable()
@@ -12,7 +13,8 @@ export class TasksService {
     @InjectRepository(TaskEntity)
     private readonly repo: Repository<TaskEntity>,
     @InjectRepository(ContractEntity)
-    private readonly contractRepo: Repository<ContractEntity>
+    private readonly contractRepo: Repository<ContractEntity>,
+    private readonly notifications: NotificationsService
   ) { }
 
   async findAll(lat?: number, lng?: number, radiusInKm: number = 50, category?: string): Promise<TaskEntity[]> {
@@ -75,13 +77,34 @@ export class TasksService {
   }
 
   async update(id: string, userId: string, updates: Partial<TaskEntity>, userRole?: string): Promise<TaskEntity> {
-    const task = await this.repo.findOneBy({ id })
+    const task = await this.repo.findOne({ where: { id }, relations: ['bids', 'bids.helper'] })
     if (!task) {
       throw new NotFoundException('Task not found')
     }
     if (task.requesterId !== userId && userRole !== 'admin') {
       throw new ForbiddenException('You are not authorized to update this task')
     }
+
+    if (task.status !== 'open' && userRole !== 'admin') {
+      throw new ForbiddenException('Cannot edit task after a bid has been accepted')
+    }
+
+    // Check for critical updates if task has an accepted bid
+    const acceptedBid = task.bids?.find(b => b.status === 'accepted')
+    if (acceptedBid && acceptedBid.helper) {
+      const criticalFields = ['title', 'description', 'budgetMin', 'budgetMax']
+      const hasCriticalUpdate = criticalFields.some(field => updates[field as keyof TaskEntity] !== undefined)
+
+      if (hasCriticalUpdate) {
+        await this.notifications.create({
+          userId: acceptedBid.helper.id,
+          message: `The task "${task.title}" you are working on has been modified by the requester. Please review the changes.`,
+          type: 'warning',
+          resourceId: task.id
+        })
+      }
+    }
+
     Object.assign(task, updates)
     return this.repo.save(task)
   }
@@ -93,6 +116,32 @@ export class TasksService {
       throw new ForbiddenException('You are not authorized to delete this task')
     }
     await this.repo.delete(id)
+  }
+
+  async startTask(taskId: string, userId: string): Promise<TaskEntity> {
+    const task = await this.repo.findOne({ where: { id: taskId }, relations: ['bids', 'bids.helper'] })
+    if (!task) throw new NotFoundException('Task not found')
+
+    if (task.status !== 'accepted') {
+      throw new BadRequestException('Task must be in accepted status to start')
+    }
+
+    const acceptedBid = task.bids?.find(b => b.status === 'accepted')
+    if (!acceptedBid || !acceptedBid.helper || acceptedBid.helper.id !== userId) {
+      throw new ForbiddenException('Only the assigned helper can start the task')
+    }
+
+    task.status = 'in_progress'
+    await this.repo.save(task)
+
+    // Update Contract Status
+    const contract = await this.contractRepo.findOne({ where: { taskId: task.id } })
+    if (contract) {
+      contract.status = 'started'
+      await this.contractRepo.save(contract)
+    }
+
+    return task
   }
 
   async requestCompletion(taskId: string, userId: string): Promise<TaskEntity> {

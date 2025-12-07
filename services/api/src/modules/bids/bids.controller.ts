@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, UseGuards, Request, Patch } from '@nestjs/common'
+import { Controller, Post, Get, Body, Param, UseGuards, Request, Patch, Delete } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { BidsService } from './bids.service'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
@@ -37,5 +37,10 @@ export class BidsController {
   @Post('bids/:bidId/accept')
   async acceptBid(@Param('bidId') bidId: string, @Request() req: any) {
     return this.bidsService.acceptBid(bidId, req.user.id)
+  }
+
+  @Delete('bids/:bidId')
+  async withdrawBid(@Param('bidId') bidId: string, @Request() req: any) {
+    return this.bidsService.withdrawBid(bidId, req.user.id)
   }
 }

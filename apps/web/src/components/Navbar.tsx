@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { UserProfile } from '@helpfinder/shared'
+import { NotificationBell } from './NotificationBell'
 
 interface NavbarProps {
     user: UserProfile | null
@@ -16,6 +17,7 @@ export const Navbar = ({ user, onLogout }: NavbarProps) => {
                 <div>
                     {user ? (
                         <div className="flex items-center gap-4">
+                            <NotificationBell />
                             <span className="text-secondary text-sm hidden-mobile">Welcome, <b>{user.name}</b></span>
                             {user.role === 'admin' && (
                                 <Link href="/admin" className="btn btn-sm btn-danger">

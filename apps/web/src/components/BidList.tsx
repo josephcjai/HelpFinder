@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Task, UserProfile, Bid } from '@helpfinder/shared'
-import { getBids, placeBid, updateBid, acceptBid } from '../utils/api'
+import { getBids, placeBid, updateBid, acceptBid, withdrawBid } from '../utils/api'
 import { useToast } from './ui/Toast'
 import { useModal } from './ui/ModalProvider'
 
@@ -125,11 +125,34 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
     // Check if current user has already bid
     const myBid = bids.find(b => b.helperId === user.id)
 
+    const handleWithdrawBid = (bidId: string) => {
+        showConfirmation({
+            title: 'Withdraw Bid?',
+            message: myBid?.status === 'accepted'
+                ? 'WARNING: This task is currently assigned to you. Withdrawing will cancel the contract and reopen the task for others. Are you sure?'
+                : 'Are you sure you want to withdraw your bid?',
+            isDangerous: true,
+            confirmText: 'Withdraw',
+            onConfirm: async () => {
+                try {
+                    await withdrawBid(bidId)
+                    showToast('Bid withdrawn successfully', 'success')
+                    onBidPlaced?.()
+                    loadBids()
+                } catch (e) {
+                    showToast('Failed to withdraw bid', 'error')
+                }
+            }
+        })
+    }
+
+
+
     if (myBid && !showBidForm) {
         return (
             <div className="mt-4 border-t pt-4">
                 <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                    <div className={`absolute top-0 left-0 w-1 h-full ${myBid.status === 'accepted' ? 'bg-green-500' : 'bg-blue-500'}`}></div>
 
                     <div className="flex justify-between items-start mb-4 pl-2">
                         <div>
@@ -141,11 +164,25 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
                                 </span>
                             </div>
                         </div>
-                        {myBid.status === 'pending' && task.status === 'open' && (
-                            <button onClick={() => handleEditBid(myBid)} className="btn btn-sm btn-secondary bg-white text-xs">
-                                Edit Bid
-                            </button>
-                        )}
+                        <div className="flex gap-2">
+                            {/* Allow editing only if pending */}
+                            {myBid.status === 'pending' && (
+                                <>
+                                    <button
+                                        onClick={() => handleEditBid(myBid)}
+                                        className="btn btn-sm btn-secondary bg-white text-xs"
+                                    >
+                                        Edit Bid
+                                    </button>
+                                    <button
+                                        onClick={() => handleWithdrawBid(myBid.id)}
+                                        className="btn btn-sm btn-danger bg-white text-xs"
+                                    >
+                                        Withdraw
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
 
                     {myBid.message && (
@@ -162,9 +199,11 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
     return (
         <div className="mt-4 border-t pt-4">
             {!showBidForm ? (
-                <button onClick={() => setShowBidForm(true)} className="btn btn-sm btn-secondary w-full">
-                    Place a Bid
-                </button>
+                task.status === 'open' && (
+                    <button onClick={() => setShowBidForm(true)} className="btn btn-sm btn-secondary w-full">
+                        Place a Bid
+                    </button>
+                )
             ) : (
                 <form onSubmit={handlePlaceBid} className="flex-col gap-2">
                     <h4 className="font-bold text-sm mb-2">{editingBidId ? 'Edit Your Bid' : 'Place a Bid'}</h4>

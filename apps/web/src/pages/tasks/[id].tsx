@@ -53,6 +53,7 @@ export default function TaskDetailsPage() {
 
     const {
         handleDelete,
+        handleStartTask,
         handleRequestCompletion,
         handleApproveCompletion,
         handleRejectCompletion,
@@ -79,7 +80,7 @@ export default function TaskDetailsPage() {
 
     const isOwner = user && user.id === task.requesterId
     const isAdmin = user && user.role === 'admin'
-    const canEdit = isOwner || isAdmin
+    const canEdit = (isOwner || isAdmin) && task.status === 'open'
 
     const handleLogout = () => {
         localStorage.removeItem('token')
@@ -180,7 +181,7 @@ export default function TaskDetailsPage() {
                         </div>
 
                         {/* Bidding Section */}
-                        {task.status === 'open' && user && (
+                        {(task.status === 'open' || task.status === 'accepted') && user && (
                             <div className="card">
                                 <h2 className="heading-2 mb-4">Bids</h2>
                                 <BidList task={task} user={user} onBidAccepted={loadTask} onBidPlaced={loadTask} />
@@ -228,6 +229,13 @@ export default function TaskDetailsPage() {
                             <div className="card">
                                 <h3 className="text-sm font-bold text-secondary uppercase tracking-wider mb-4">Actions</h3>
                                 <div className="flex flex-col gap-2">
+                                    {/* Helper: Start Task */}
+                                    {task.status === 'accepted' && task.bids?.some(b => b.status === 'accepted' && b.helperId === user.id) && (
+                                        <button onClick={() => handleStartTask(task)} className="btn btn-primary w-full">
+                                            Start Task
+                                        </button>
+                                    )}
+
                                     {/* Helper: Request Completion */}
                                     {task.status === 'in_progress' && task.bids?.some(b => b.status === 'accepted' && b.helperId === user.id) && (
                                         <button onClick={() => handleRequestCompletion(task)} className="btn btn-primary w-full">

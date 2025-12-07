@@ -50,6 +50,12 @@ export class TasksController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post(':id/start')
+  async startTask(@Param('id') id: string, @Request() req: any) {
+    return this.tasks.startTask(id, req.user.id)
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post(':id/complete-request')
   async requestCompletion(@Param('id') id: string, @Request() req: any) {
     return this.tasks.requestCompletion(id, req.user.id)

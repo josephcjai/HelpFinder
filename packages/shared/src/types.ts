@@ -15,7 +15,7 @@ export interface Category {
     updatedAt: Date
 }
 
-export type TaskStatus = 'open' | 'in_progress' | 'review_pending' | 'completed' | 'cancelled'
+export type TaskStatus = 'open' | 'accepted' | 'in_progress' | 'review_pending' | 'completed' | 'cancelled'
 
 export interface Task {
     id: string
