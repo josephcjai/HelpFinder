@@ -99,7 +99,7 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
                         )}
                     </div>
 
-                    {user && (user.id === task.requesterId || user.role === 'admin') && task.status === 'open' && (
+                    {user && ((user.id === task.requesterId && task.status === 'open') || user.role === 'admin') && (
                         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
                                 onClick={(e) => { e.stopPropagation(); onEdit(task) }}

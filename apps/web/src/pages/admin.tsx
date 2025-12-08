@@ -16,24 +16,34 @@ type User = {
 export default function AdminDashboard() {
     const [users, setUsers] = useState<User[]>([])
     const [loading, setLoading] = useState(true)
+    const [checkingAuth, setCheckingAuth] = useState(true)
     const router = useRouter()
 
     useEffect(() => {
         const init = async () => {
-            const profile = await getUserProfile()
-            if (!profile || profile.role !== 'admin') {
-                router.push('/')
-                return
+            try {
+                const profile = await getUserProfile()
+                if (!profile || profile.role !== 'admin') {
+                    await router.push('/login')
+                    return
+                }
+                setCheckingAuth(false)
+                loadUsers()
+            } catch (error) {
+                router.push('/login')
             }
-            loadUsers()
         }
         init()
     }, [])
 
     const loadUsers = async () => {
         setLoading(true)
-        const data = await getUsers()
-        setUsers(data)
+        try {
+            const data = await getUsers()
+            setUsers(data)
+        } catch (error) {
+            console.error('Failed to load users', error)
+        }
         setLoading(false)
     }
 
@@ -46,6 +56,14 @@ export default function AdminDashboard() {
     const handleRoleChange = async (id: string, newRole: string) => {
         await updateUserRole(id, newRole)
         loadUsers()
+    }
+
+    if (checkingAuth) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <p className="text-xl text-secondary">Loading...</p>
+            </div>
+        )
     }
 
     return (

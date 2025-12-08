@@ -80,7 +80,7 @@ export default function TaskDetailsPage() {
 
     const isOwner = user && user.id === task.requesterId
     const isAdmin = user && user.role === 'admin'
-    const canEdit = (isOwner || isAdmin) && task.status === 'open'
+    const canEdit = (isOwner && task.status === 'open') || isAdmin
 
     const handleLogout = () => {
         localStorage.removeItem('token')
