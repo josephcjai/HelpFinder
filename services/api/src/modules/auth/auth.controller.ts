@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Patch, Post, Request, UseGuards } from '@nestjs/common'
 import { JwtAuthGuard } from './jwt-auth.guard'
 import { ApiTags } from '@nestjs/swagger'
 import { AuthService } from './auth.service'
@@ -28,5 +28,18 @@ export class AuthController {
     @Get('profile')
     getProfile(@Request() req: any) {
         return req.user
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch('profile')
+    async updateProfile(@Request() req: any, @Body() body: any) {
+        const updates = {
+            address: body.address,
+            country: body.country,
+            zipCode: body.zipCode,
+            latitude: body.latitude,
+            longitude: body.longitude
+        }
+        return this.authService.updateProfile(req.user.id, updates)
     }
 }

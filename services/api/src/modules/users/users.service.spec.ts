@@ -70,4 +70,18 @@ describe('UsersService', () => {
 
         await expect(service.delete('user-123')).rejects.toThrow('Cannot delete Super Admin')
     })
+
+    it('should update user profile', async () => {
+        const mockRepoUser = { ...mockUser }; // Clone to avoid side effects
+        jest.spyOn(repo, 'findOneBy').mockResolvedValue(mockRepoUser)
+        // Mock save to return the modified object
+        jest.spyOn(repo, 'save').mockImplementation((u: any) => Promise.resolve(u))
+
+        const updates = { address: 'New Address', latitude: 10, longitude: 20 }
+        const result = await service.updateProfile('user-123', updates)
+
+        expect(result.address).toBe('New Address')
+        expect(result.latitude).toBe(10)
+        expect(repo.save).toHaveBeenCalled()
+    })
 })

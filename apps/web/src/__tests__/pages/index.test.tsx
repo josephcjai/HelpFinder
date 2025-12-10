@@ -18,7 +18,14 @@ jest.mock('../../utils/api', () => ({
     approveCompletion: jest.fn(),
     rejectCompletion: jest.fn(),
     reopenTask: jest.fn(),
+    getCategories: jest.fn().mockResolvedValue([]),
 }))
+
+jest.mock('next/link', () => {
+    return ({ children, href }: { children: React.ReactNode; href: string }) => {
+        return <a href={href}>{children}</a>
+    }
+})
 
 describe('Home Page', () => {
     beforeEach(() => {
@@ -35,7 +42,8 @@ describe('Home Page', () => {
         (getToken as jest.Mock).mockReturnValue(null);
         (getTasks as jest.Mock).mockResolvedValue([])
         render(<Home />)
-        expect(await screen.findByText('Login')).toBeInTheDocument()
+        const loginLinks = await screen.findAllByText('Login')
+        expect(loginLinks.length).toBeGreaterThan(0)
     })
 
     it('renders welcome message when logged in', async () => {
@@ -51,7 +59,8 @@ describe('Home Page', () => {
         render(<Home />)
 
         expect(await screen.findByText((content, node) => {
-            const hasText = (node: Element) => node.textContent === 'Welcome, Test User'
+            // Logic splits by space and takes first part: "Test User" -> "Test"
+            const hasText = (node: Element) => node.textContent === 'Welcome back, Test!'
             const nodeHasText = hasText(node as Element)
             const childrenDontHaveText = Array.from(node?.children || []).every(
                 child => !hasText(child)

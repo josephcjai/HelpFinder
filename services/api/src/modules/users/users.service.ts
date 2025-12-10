@@ -43,6 +43,14 @@ export class UsersService {
         return this.repo.save(user)
     }
 
+    async updateProfile(id: string, updates: Partial<UserEntity>): Promise<UserEntity> {
+        const user = await this.repo.findOneBy({ id })
+        if (!user) throw new Error('User not found')
+
+        Object.assign(user, updates)
+        return this.repo.save(user)
+    }
+
     async save(user: UserEntity): Promise<UserEntity> {
         return this.repo.save(user)
     }

@@ -22,6 +22,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         if (!user) {
             throw new UnauthorizedException('User no longer exists')
         }
-        return { id: payload.sub, email: payload.email, name: payload.name, role: payload.role, isSuperAdmin: payload.isSuperAdmin }
+        // Return the fresh user record from DB so profile updates are reflected immediately
+        // without requiring re-login
+        const { passwordHash, ...result } = user
+        return result
     }
 }

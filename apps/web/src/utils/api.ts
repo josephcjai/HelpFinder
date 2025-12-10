@@ -1,4 +1,4 @@
-import { Task, Bid, Category } from '@helpfinder/shared'
+import { Task, Bid, Category, UserProfile } from '@helpfinder/shared'
 
 export const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'
 
@@ -42,12 +42,23 @@ export const authenticatedFetch = async (endpoint: string, options: RequestInit 
     return response
 }
 
-export const getUserProfile = async () => {
+export const getUserProfile = async (): Promise<UserProfile | null> => {
     const res = await authenticatedFetch('/auth/profile')
     if (res.ok) {
         return res.json()
     }
     return null
+}
+
+export const updateUserProfile = async (updates: Partial<UserProfile>) => {
+    const res = await authenticatedFetch('/auth/profile', {
+        method: 'PATCH',
+        body: JSON.stringify(updates)
+    })
+    if (res.ok) {
+        return res.json()
+    }
+    throw new Error('Failed to update profile')
 }
 
 export const getTasks = async (lat?: number, lng?: number, radius?: number, category?: string): Promise<Task[]> => {

@@ -35,6 +35,23 @@ export default function Home() {
       if (getToken()) {
         const profile = await getUserProfile()
         setUser(profile)
+
+        if (profile) {
+          if (profile.latitude && profile.longitude) {
+            setSearchLocation({ lat: profile.latitude, lng: profile.longitude })
+          } else if (profile.zipCode || profile.country) {
+            const query = [profile.zipCode, profile.country].filter(Boolean).join(', ')
+            if (query) {
+              import('../utils/geocoding').then(({ geocodeAddress }) => {
+                geocodeAddress(query).then(res => {
+                  if (res) {
+                    setSearchLocation({ lat: res.lat, lng: res.lon })
+                  }
+                })
+              })
+            }
+          }
+        }
       }
       loadCategories()
       loadTasks()
@@ -300,12 +317,48 @@ export default function Home() {
 
         {viewMode === 'map' && (
           <div className="mb-8" style={{ height: '600px', width: '100%' }}>
+            {/* Map Search Input */}
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                className="input text-sm py-1"
+                placeholder="Search map location..."
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    const val = e.currentTarget.value
+                    const { geocodeAddress } = await import('../utils/geocoding')
+                    const res = await geocodeAddress(val)
+                    if (res) {
+                      // Only update map center, let user click to select
+                      setSearchLocation({ lat: res.lat, lng: res.lon })
+                    }
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="btn btn-secondary text-sm py-1"
+                onClick={async (e) => {
+                  const input = e.currentTarget.previousElementSibling as HTMLInputElement
+                  const val = input.value
+                  const { geocodeAddress } = await import('../utils/geocoding')
+                  const res = await geocodeAddress(val)
+                  if (res) {
+                    setSearchLocation({ lat: res.lat, lng: res.lon })
+                  }
+                }}
+              >
+                Search
+              </button>
+            </div>
             <MapComponent
               tasks={displayedTasks}
               zoom={13}
               onLocationSelect={isSearchActive ? (lat, lng) => setSearchLocation({ lat, lng }) : undefined}
               selectedLocation={searchLocation}
               searchRadius={isSearchActive ? searchRadius : undefined}
+              center={searchLocation ? [searchLocation.lat, searchLocation.lng] : undefined}
             />
           </div>
         )}

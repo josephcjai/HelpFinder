@@ -4,6 +4,7 @@ import { BidsService } from './bids.service'
 import { BidEntity } from '../../entities/bid.entity'
 import { TaskEntity } from '../../entities/task.entity'
 import { UserEntity } from '../../entities/user.entity'
+import { ContractEntity } from '../../entities/contract.entity'
 import { ForbiddenException, NotFoundException } from '@nestjs/common'
 
 const mockUser = { id: 'user-1' } as UserEntity
@@ -15,6 +16,7 @@ describe('BidsService', () => {
     let service: BidsService
     let bidRepo: any
     let taskRepo: any
+    let contractRepo: any
 
     beforeEach(async () => {
         // Reset mocks
@@ -28,9 +30,10 @@ describe('BidsService', () => {
                     provide: getRepositoryToken(BidEntity),
                     useValue: {
                         create: jest.fn().mockReturnValue(mockBid),
-                        save: jest.fn().mockResolvedValue(mockBid),
+                        save: jest.fn().mockImplementation((b: any) => Promise.resolve(b)),
                         find: jest.fn().mockResolvedValue([mockBid]),
                         findOne: jest.fn().mockResolvedValue(mockBid),
+                        remove: jest.fn().mockResolvedValue({}),
                     },
                 },
                 {
@@ -40,12 +43,21 @@ describe('BidsService', () => {
                         save: jest.fn().mockResolvedValue(mockTask),
                     },
                 },
+                {
+                    provide: getRepositoryToken(ContractEntity),
+                    useValue: {
+                        create: jest.fn().mockReturnValue({ id: 'contract-1' }),
+                        save: jest.fn().mockResolvedValue({ id: 'contract-1' }),
+                        findOne: jest.fn().mockResolvedValue({ id: 'contract-1' }),
+                    },
+                },
             ],
         }).compile()
 
         service = module.get<BidsService>(BidsService)
         bidRepo = module.get(getRepositoryToken(BidEntity))
         taskRepo = module.get(getRepositoryToken(TaskEntity))
+        contractRepo = module.get(getRepositoryToken(ContractEntity))
     })
 
     it('should place a bid', async () => {
@@ -62,9 +74,10 @@ describe('BidsService', () => {
     it('should accept a bid', async () => {
         const acceptedBid = await service.acceptBid('bid-1', 'requester-1')
         expect(acceptedBid.status).toBe('accepted')
-        expect(acceptedBid.task.status).toBe('in_progress')
+        expect(acceptedBid.task.status).toBe('accepted')
         expect(bidRepo.save).toHaveBeenCalled()
         expect(taskRepo.save).toHaveBeenCalled()
+        expect(contractRepo.create).toHaveBeenCalled()
     })
 
     it('should not allow non-owner to accept bid', async () => {

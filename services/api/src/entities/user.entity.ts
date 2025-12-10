@@ -33,6 +33,22 @@ export class UserEntity {
   @Column({ default: false })
   isSuperAdmin!: boolean
 
+  // Address Details
+  @Column({ type: 'float', nullable: true })
+  latitude?: number
+
+  @Column({ type: 'float', nullable: true })
+  longitude?: number
+
+  @Column({ nullable: true })
+  address?: string
+
+  @Column({ nullable: true })
+  country?: string
+
+  @Column({ nullable: true })
+  zipCode?: string
+
   @CreateDateColumn()
   createdAt!: Date
 

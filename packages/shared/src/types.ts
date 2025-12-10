@@ -6,6 +6,11 @@ export interface UserProfile {
     name: string
     role: UserRole
     isSuperAdmin?: boolean
+    latitude?: number
+    longitude?: number
+    address?: string
+    country?: string
+    zipCode?: string
 }
 
 export interface Category {

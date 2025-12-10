@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { TasksService } from './tasks.service'
 import { TaskEntity } from '../../entities/task.entity'
+import { ContractEntity } from '../../entities/contract.entity'
+import { NotificationsService } from '../notifications/notifications.service'
 import { Repository } from 'typeorm'
 
 const mockTask = {
@@ -13,7 +15,9 @@ const mockTask = {
 
 describe('TasksService', () => {
     let service: TasksService
-    let repo: any // Use any to allow mocking methods easily
+    let repo: any
+    let contractRepo: any
+    let notificationsService: any
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -28,6 +32,31 @@ describe('TasksService', () => {
                         findOne: jest.fn().mockResolvedValue(mockTask),
                         findOneBy: jest.fn().mockResolvedValue(mockTask),
                         delete: jest.fn().mockResolvedValue({ affected: 1 }),
+                        createQueryBuilder: jest.fn(() => ({
+                            leftJoinAndSelect: jest.fn().mockReturnThis(),
+                            orderBy: jest.fn().mockReturnThis(),
+                            addSelect: jest.fn().mockReturnThis(),
+                            where: jest.fn().mockReturnThis(),
+                            andWhere: jest.fn().mockReturnThis(),
+                            setParameters: jest.fn().mockReturnThis(),
+                            getMany: jest.fn().mockResolvedValue([mockTask]),
+                        })),
+                        manager: {
+                            findOne: jest.fn()
+                        }
+                    },
+                },
+                {
+                    provide: getRepositoryToken(ContractEntity),
+                    useValue: {
+                        findOne: jest.fn(),
+                        save: jest.fn(),
+                    },
+                },
+                {
+                    provide: NotificationsService,
+                    useValue: {
+                        create: jest.fn(),
                     },
                 },
             ],
@@ -35,6 +64,8 @@ describe('TasksService', () => {
 
         service = module.get<TasksService>(TasksService)
         repo = module.get(getRepositoryToken(TaskEntity))
+        contractRepo = module.get(getRepositoryToken(ContractEntity))
+        notificationsService = module.get(NotificationsService)
     })
 
     it('should be defined', () => {
@@ -68,7 +99,19 @@ describe('TasksService', () => {
         repo.findOneBy.mockResolvedValue(mockTask)
 
         await expect(service.delete('task-123', 'other-user', false))
-            .rejects.toThrow('Unauthorized')
+            .rejects.toThrow('You are not authorized to delete this task')
+    })
+
+    it('should start task', async () => {
+        const acceptedTask = { ...mockTask, status: 'accepted', bids: [{ id: 'bid-1', status: 'accepted', helper: { id: 'helper-1' } }] }
+        repo.findOne.mockResolvedValue(acceptedTask)
+        repo.save.mockResolvedValue({ ...acceptedTask, status: 'in_progress' })
+        contractRepo.findOne.mockResolvedValue({ id: 'contract-1', status: 'pending' })
+        contractRepo.save.mockImplementation((c: any) => c)
+
+        const result = await service.startTask('task-123', 'helper-1')
+        expect(result.status).toBe('in_progress')
+        expect(contractRepo.save).toHaveBeenCalled()
     })
 
     it('should request completion', async () => {

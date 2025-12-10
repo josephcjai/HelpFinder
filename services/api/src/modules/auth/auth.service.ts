@@ -35,4 +35,8 @@ export class AuthService {
         const user = await this.usersService.create(email, hash, name)
         return this.login(user)
     }
+
+    async updateProfile(userId: string, updates: any) {
+        return this.usersService.updateProfile(userId, updates)
+    }
 }

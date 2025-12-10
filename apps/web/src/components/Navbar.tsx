@@ -19,6 +19,9 @@ export const Navbar = ({ user, onLogout }: NavbarProps) => {
                         <div className="flex items-center gap-4">
                             <NotificationBell />
                             <span className="text-secondary text-sm hidden-mobile">Welcome, <b>{user.name}</b></span>
+                            <Link href="/profile" className="text-sm text-secondary hover:text-primary">
+                                Profile
+                            </Link>
                             {user.role === 'admin' && (
                                 <Link href="/admin" className="btn btn-sm btn-danger">
                                     Admin

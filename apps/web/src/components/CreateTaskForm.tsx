@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react'
 import { authenticatedFetch, getCategories } from '../utils/api'
 import { Task, Category } from '@helpfinder/shared'
 import { useToast } from './ui/Toast'
+import dynamic from 'next/dynamic'
 
 interface CreateTaskFormProps {
     onTaskSaved: (task: Task, isEdit: boolean) => void
     onCancel: () => void
     editingTask?: Task | null
 }
-
-import dynamic from 'next/dynamic'
 
 const MapComponent = dynamic(() => import('./MapComponent'), { ssr: false })
 
@@ -41,24 +40,52 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
             setLat(editingTask.latitude)
             setLng(editingTask.longitude)
 
-            // Set map center to existing location if available
+            // Set map center to existing location
             if (editingTask.latitude && editingTask.longitude) {
                 setMapCenter([editingTask.latitude, editingTask.longitude])
             }
-            // Otherwise geocode if location is missing but address info exists
+            // Fallback to geocoding task address if lat/lng missing
             else {
                 const query = [editingTask.zipCode, editingTask.country].filter(Boolean).join(', ')
                 if (query) {
-                    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data && data[0]) {
-                                setMapCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)])
+                    import('../utils/geocoding').then(({ geocodeAddress }) => {
+                        geocodeAddress(query).then(res => {
+                            if (res) {
+                                setMapCenter([res.lat, res.lon])
                             }
                         })
-                        .catch(console.error)
+                    })
                 }
             }
+        } else {
+            // Check for user profile defaults
+            const fetchProfile = async () => {
+                const { getUserProfile } = await import('../utils/api')
+                const user = await getUserProfile()
+                if (user) {
+                    if (user.address) setAddress(user.address)
+                    if (user.country) setCountry(user.country)
+                    if (user.zipCode) setZipCode(user.zipCode)
+
+                    if (user.latitude && user.longitude) {
+                        setLat(user.latitude)
+                        setLng(user.longitude)
+                        setMapCenter([user.latitude, user.longitude])
+                    }
+                    // Fallback: Geocode user profile address if lat/lng missing
+                    else if (user.zipCode || user.country) {
+                        const query = [user.zipCode, user.country].filter(Boolean).join(', ')
+                        if (query) {
+                            const { geocodeAddress } = await import('../utils/geocoding')
+                            const res = await geocodeAddress(query)
+                            if (res) {
+                                setMapCenter([res.lat, res.lon])
+                            }
+                        }
+                    }
+                }
+            }
+            fetchProfile()
         }
     }, [editingTask])
 
@@ -172,16 +199,6 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
                     </div>
 
                     <div className="md:col-span-2">
-                        <label className="label">Address</label>
-                        <input
-                            className="input"
-                            placeholder="e.g. 123 Main St"
-                            value={address}
-                            onChange={e => setAddress(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="md:col-span-2">
                         <label className="label">Country</label>
                         <input
                             className="input"
@@ -194,6 +211,42 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
 
                 <div>
                     <label className="label mb-2">Location (Click to pick)</label>
+
+                    {/* Map Search Input */}
+                    <div className="flex gap-2 mb-2">
+                        <input
+                            type="text"
+                            className="input text-sm py-1"
+                            placeholder="Search map location..."
+                            onKeyDown={async (e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault()
+                                    const val = e.currentTarget.value
+                                    const { geocodeAddress } = await import('../utils/geocoding')
+                                    const res = await geocodeAddress(val)
+                                    if (res) {
+                                        setMapCenter([res.lat, res.lon])
+                                    }
+                                }
+                            }}
+                        />
+                        <button
+                            type="button"
+                            className="btn btn-secondary text-sm py-1"
+                            onClick={async (e) => {
+                                const input = e.currentTarget.previousElementSibling as HTMLInputElement
+                                const val = input.value
+                                const { geocodeAddress } = await import('../utils/geocoding')
+                                const res = await geocodeAddress(val)
+                                if (res) {
+                                    setMapCenter([res.lat, res.lon])
+                                }
+                            }}
+                        >
+                            Search
+                        </button>
+                    </div>
+
                     <div className="rounded-xl overflow-hidden border border-slate-200 map-container">
                         <MapComponent
                             selectedLocation={lat && lng ? { lat, lng } : null}

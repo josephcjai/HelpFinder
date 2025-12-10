@@ -9,10 +9,18 @@ jest.mock('../../utils/api', () => ({
     deleteUser: jest.fn(),
     updateUserRole: jest.fn(),
     getUserProfile: jest.fn(),
+    getCategories: jest.fn().mockResolvedValue([]),
+    createCategory: jest.fn(),
+    updateCategory: jest.fn(),
+    deleteCategory: jest.fn(),
 }))
 
 jest.mock('next/router', () => ({
     useRouter: jest.fn(),
+}))
+
+jest.mock('../../components/ui/Toast', () => ({
+    useToast: jest.fn(() => ({ showToast: jest.fn() })),
 }))
 
 import { getUserProfile, getUsers } from '../../utils/api'
@@ -27,7 +35,7 @@ describe('Admin Dashboard', () => {
     it('redirects if not admin', async () => {
         (getUserProfile as jest.Mock).mockResolvedValue({ role: 'user' })
         render(<AdminDashboard />)
-        await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'))
+        await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/login'))
     })
 
     it('renders user list if admin', async () => {
