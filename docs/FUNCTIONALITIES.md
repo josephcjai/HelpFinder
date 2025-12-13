@@ -64,11 +64,17 @@ The task lifecycle defines the flow of a help request from creation to completio
 ## 5. Search & Discovery
 
 - **Location Filter**: Users can filter tasks by radius (km) from a specific point on the map.
-- **Category Filter**: Users can filter tasks by dynamic categories (e.g., "Moving", "Cleaning").
+- **Category Filter**: Implements "Soft Filtering":
+    - Selecting a category prioritizes matching tasks in the "Nearby/Matching" list.
+    - Non-matching tasks are still visible in the "Other Tasks" section, ensuring broad discovery.
+- **Split Views**:
+    - **Nearby Tasks**: Shows tasks that match BOTH the Location Filter (radius) and Category Filter.
+    - **Other Tasks**: Displays tasks that are outside the search radius or don't match the primary category, ensuring users don't miss global or remote opportunities.
+- **View Modes**: Toggle between **Grid View** and **Map View** with synchronized filtering.
 - **My Tasks**: Users can toggle between "All Tasks" and "My Tasks" (tasks they created).
 - **Map Capabilities**:
     - **Interactive Map**: Visualize task locations on an interactive map using Leaflet.
-    - **Location Search**: Users can search for specific places (e.g., "Central Park", "Coffee Shop") directly on the map to find and select locations quickly without manual scrolling.
+    - **Seamless Search**: High-visibility search overlay allows finding locations by name or zip code directly on the map.
     - **Geocoding Fallback**: Automatically defaults the map view to the user's saved profile address (or Zip/Country) when latitude/longitude are missing.
 
 ## 6. Notifications

@@ -8,14 +8,15 @@ interface CreateTaskFormProps {
     onTaskSaved: (task: Task, isEdit: boolean) => void
     onCancel: () => void
     editingTask?: Task | null
+    initialCategoryId?: string
 }
 
 const MapComponent = dynamic(() => import('./MapComponent'), { ssr: false })
 
-export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTaskFormProps) => {
+export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask, initialCategoryId }: CreateTaskFormProps) => {
     const [title, setTitle] = useState('')
     const [desc, setDesc] = useState('')
-    const [categoryId, setCategoryId] = useState('')
+    const [categoryId, setCategoryId] = useState(editingTask?.categoryId || initialCategoryId || '')
     const [budget, setBudget] = useState('')
     const [address, setAddress] = useState('')
     const [country, setCountry] = useState('')
@@ -177,7 +178,7 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
                     <div>
                         <label className="label">Budget (Optional)</label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary">$</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
                             <input
                                 type="number"
                                 className="input input-with-icon"
@@ -186,6 +187,16 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
                                 onChange={e => setBudget(e.target.value)}
                             />
                         </div>
+                    </div>
+
+                    <div>
+                        <label className="label">Address</label>
+                        <input
+                            className="input"
+                            placeholder="e.g. 123 Main St"
+                            value={address}
+                            onChange={e => setAddress(e.target.value)}
+                        />
                     </div>
 
                     <div>
@@ -247,7 +258,7 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
                         </button>
                     </div>
 
-                    <div className="rounded-xl overflow-hidden border border-slate-200 map-container">
+                    <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 map-container">
                         <MapComponent
                             selectedLocation={lat && lng ? { lat, lng } : null}
                             onLocationSelect={(l, lg) => { setLat(l); setLng(lg) }}
@@ -255,10 +266,10 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask }: CreateTas
                             center={mapCenter}
                         />
                     </div>
-                    {lat && <p className="text-sm text-secondary mt-2">Selected Coordinates: {lat.toFixed(4)}, {lng?.toFixed(4)}</p>}
+                    {lat && <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Selected Coordinates: {lat.toFixed(4)}, {lng?.toFixed(4)}</p>}
                 </div>
 
-                <div className="flex gap-4 pt-4 border-t border-slate-100">
+                <div className="flex gap-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                     <button type="submit" className="btn btn-primary flex-1">
                         {editingTask ? 'Update Task' : 'Post Task'}
                     </button>

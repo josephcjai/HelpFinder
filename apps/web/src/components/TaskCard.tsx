@@ -1,13 +1,12 @@
 import { Task, UserProfile } from '@helpfinder/shared'
 import { BidList } from './BidList'
-import { authenticatedFetch } from '../utils/api'
+import { authenticatedFetch, placeBid, startTask } from '../utils/api'
 import { useToast } from './ui/Toast'
 import { useModal } from './ui/ModalProvider'
 import { useTaskOperations } from '../hooks/useTaskOperations'
-import Link from 'next/link'
 import { useState } from 'react'
-import { placeBid, startTask } from '../utils/api'
 import { ConfirmModal } from './ui/ConfirmModal'
+import { useRouter } from 'next/router'
 
 interface TaskCardProps {
     task: Task
@@ -16,10 +15,6 @@ interface TaskCardProps {
     onDelete: (taskId: string) => void
     onRefresh: () => void
 }
-
-import { useRouter } from 'next/router'
-
-// ... imports
 
 export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardProps) => {
     const router = useRouter()
@@ -64,43 +59,81 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
         router.push(`/tasks/${task.id}`)
     }
 
+    const isOwner = user && user.id === task.requesterId
+    const isAdmin = user && user.role === 'admin'
+    const isHelper = user && user.id !== task.requesterId && user.role !== 'admin'
+
     return (
         <>
             <div
                 onClick={handleCardClick}
-                className="card card-hover flex flex-col h-full relative group cursor-pointer transition-all hover:shadow-md"
+                className="group flex flex-col gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer h-full"
             >
-                <div className="flex justify-between items-start mb-4">
-                    <h3 className="card-title hover:text-primary transition-colors">
+                <div className="flex justify-between items-start">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">
                         {task.title}
                     </h3>
-                    <span className={`badge badge-${task.status === 'open' ? 'success' : 'secondary'}`}>
-                        {task.status.toUpperCase()}
+                    <span className={`badge ${task.status === 'open' ? 'badge-success' : 'badge-secondary'}`}>
+                        {task.status}
                     </span>
                 </div>
 
+                <div className="flex items-baseline gap-2">
+                    {typeof task.budgetMin === 'number' ? (
+                        <>
+                            <p className="text-2xl font-bold text-primary">${task.budgetMin}</p>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">Budget</span>
+                        </>
+                    ) : (
+                        <p className="text-xl font-bold text-secondary italic">Negotiable</p>
+                    )}
+                </div>
+
+                <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mt-auto">
+                    <div className="flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-base">location_on</span>
+                        <span>{task.latitude ? 'Location Set' : 'Remote/No Loc'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-base">group</span>
+                        <span>{task.bids?.length || 0} Bids</span>
+                    </div>
+                </div>
+
+                {/* Category Chip */}
                 {task.category && (
-                    <div className="mb-2">
-                        <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                    <div className="mt-1">
+                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
                             {task.category.name}
                         </span>
                     </div>
                 )}
 
-                <p className="text-secondary mb-6 flex-grow">{task.description || 'No description provided.'}</p>
 
-                <div className="flex justify-between items-end mt-auto pt-4 border-t border-slate-100 w-full">
-                    <div>
-                        <div className="text-xs text-secondary uppercase font-bold tracking-wider mb-1">Budget</div>
-                        {typeof task.budgetMin === 'number' ? (
-                            <span className="font-bold text-2xl text-primary">${task.budgetMin}</span>
-                        ) : (
-                            <span className="text-secondary italic">Negotiable</span>
-                        )}
-                    </div>
+                {/* Action Area (Divider) */}
+                <div className="border-t border-gray-100 dark:border-gray-700 pt-4 mt-2 space-y-3">
 
-                    {user && ((user.id === task.requesterId && task.status === 'open') || user.role === 'admin') && (
-                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Helper: Place Bid / Accept Price */}
+                    {task.status === 'open' && isHelper && task.budgetMin && (
+                        <div>
+                            {task.bids?.some(b => b.helperId === user.id) ? (
+                                <div className="p-2 bg-blue-50 text-blue-700 text-sm text-center rounded font-medium">
+                                    You have placed a bid
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setShowAcceptConfirm(true) }}
+                                    className="btn btn-sm btn-primary w-full"
+                                >
+                                    Accept Price: ${task.budgetMin}
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Owner/Admin: Edit/Delete */}
+                    {(isOwner || isAdmin) && (
+                        <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <button
                                 onClick={(e) => { e.stopPropagation(); onEdit(task) }}
                                 className="btn btn-sm btn-secondary"
@@ -115,97 +148,76 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
                             </button>
                         </div>
                     )}
-                </div>
 
-                {task.status === 'open' && user && (
-                    <div className="mt-4">
-                        <div className="mt-4">
+                    {/* Helper: Start Task */}
+                    {task.status === 'accepted' && isHelper && task.bids?.some(b => b.helperId === user.id && b.status === 'accepted') && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); handleStartTask(task) }}
+                            className="btn btn-primary w-full"
+                        >
+                            Start Task
+                        </button>
+                    )}
+
+                    {/* Requester: Waiting Message */}
+                    {task.status === 'accepted' && isOwner && (
+                        <div className="p-2 bg-yellow-50 text-yellow-800 rounded-lg text-sm text-center">
+                            Waiting for helper start...
+                        </div>
+                    )}
+
+                    {/* Completion Workflow */}
+                    {user && (
+                        <div className="flex gap-2 flex-wrap">
+                            {/* Helper: Request Completion */}
+                            {task.status === 'in_progress' && task.bids?.some(b => b.status === 'accepted' && b.helperId === user.id) && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleRequestCompletion(task) }}
+                                    className="btn btn-sm btn-primary w-full"
+                                >
+                                    Mark as Done
+                                </button>
+                            )}
+
+                            {/* Requester: Approve/Reject Completion */}
+                            {task.status === 'review_pending' && isOwner && (
+                                <div className="flex gap-2 w-full">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleApproveCompletion(task) }}
+                                        className="btn btn-sm btn-success flex-1"
+                                    >
+                                        Approve
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleRejectCompletion(task) }}
+                                        className="btn btn-sm btn-danger flex-1"
+                                    >
+                                        Reject
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Requester: Reopen Task */}
+                            {task.status === 'completed' && isOwner && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleReopenTask(task) }}
+                                    className="btn btn-sm btn-secondary w-full"
+                                >
+                                    Reopen Task
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Bid List Collapsible/Inline - Only show on open tasks for owner or if user has bid */}
+                    {task.status === 'open' && user && (
+                        <div className="text-sm">
                             <BidList task={task} user={user} onBidAccepted={onRefresh} onBidPlaced={onRefresh} />
                         </div>
-                    </div>
-                )}
-
-                {/* Accept Price Option */}
-                {task.status === 'open' && user && user.id !== task.requesterId && user.role !== 'admin' && task.budgetMin && (
-                    <div className="mt-4 pt-4 border-t border-slate-100">
-                        {task.bids?.some(b => b.helperId === user.id) ? (
-                            <div className="p-2 bg-blue-50 text-blue-700 text-sm text-center rounded font-medium">
-                                You have placed a bid
-                            </div>
-                        ) : (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setShowAcceptConfirm(true) }}
-                                className="btn btn-sm btn-primary w-full"
-                            >
-                                Accept Price: ${task.budgetMin}
-                            </button>
-                        )}
-                    </div>
-                )}
-
-                {/* Helper Actions */}
-                {task.status === 'accepted' && user && task.bids?.some(b => b.helperId === user.id && b.status === 'accepted') && (
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            handleStartTask(task)
-                        }}
-                        className="btn btn-primary w-full mt-4"
-                    >
-                        Start Task
-                    </button>
-                )}
-
-                {/* Requester Status Message */}
-                {task.status === 'accepted' && user && task.requesterId === user.id && (
-                    <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 rounded-lg text-sm text-center">
-                        Waiting for helper to start the task...
-                    </div>
-                )}
-
-                {/* Completion Workflow Controls */}
-                {user && (
-                    <div className="mt-4 flex gap-2 flex-wrap">
-                        {/* Helper: Request Completion */}
-                        {task.status === 'in_progress' && task.bids?.some(b => b.status === 'accepted' && b.helperId === user.id) && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handleRequestCompletion(task) }}
-                                className="btn btn-sm btn-primary w-full"
-                            >
-                                Mark as Done
-                            </button>
-                        )}
-
-                        {/* Requester: Approve/Reject Completion */}
-                        {task.status === 'review_pending' && task.requesterId === user.id && (
-                            <div className="flex gap-2 w-full">
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleApproveCompletion(task) }}
-                                    className="btn btn-sm btn-success flex-1"
-                                >
-                                    Approve
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleRejectCompletion(task) }}
-                                    className="btn btn-sm btn-danger flex-1"
-                                >
-                                    Reject
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Requester: Reopen Task */}
-                        {task.status === 'completed' && task.requesterId === user.id && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handleReopenTask(task) }}
-                                className="btn btn-sm btn-secondary w-full"
-                            >
-                                Reopen Task
-                            </button>
-                        )}
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
+
             <ConfirmModal
                 isOpen={showAcceptConfirm}
                 onCancel={() => setShowAcceptConfirm(false)}
