@@ -308,11 +308,14 @@ export default function Home() {
               onClick={() => {
                 const newState = !isSearchActive;
                 setIsSearchActive(newState);
+                if (newState && viewMode === 'list') {
+                  setViewMode('map');
+                }
               }}
               className={`flex h-9 items-center px-4 rounded-lg border text-sm font-medium transition-colors ${isSearchActive ? 'bg-primary text-white border-primary' : 'bg-white text-gray-800 border-gray-200 hover:bg-gray-50'}`}
             >
               <span className="material-symbols-outlined text-lg mr-1">location_on</span>
-              {isSearchActive ? 'Location On' : 'Filter by Location'}
+              {isSearchActive ? 'Nearby' : 'Filter by Location'}
             </button>
 
             {isSearchActive && (

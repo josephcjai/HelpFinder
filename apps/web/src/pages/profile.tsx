@@ -7,6 +7,8 @@ import { UserProfile } from '@helpfinder/shared'
 import { Navbar } from '../components/Navbar'
 import { useToast } from '../components/ui/Toast'
 
+import { geocodeAddress } from '../utils/geocoding'
+
 // Dynamically import MapComponent to avoid SSR issues
 const MapComponent = dynamic(() => import('../components/MapComponent'), { ssr: false })
 
@@ -43,6 +45,16 @@ export default function ProfilePage() {
 
             if (profile.latitude && profile.longitude) {
                 setMapCenter([profile.latitude, profile.longitude])
+            } else if (profile.zipCode || profile.country) {
+                // Fallback: Geocode address fields to set map center
+                const query = [profile.zipCode, profile.country].filter(Boolean).join(', ')
+                if (query) {
+                    geocodeAddress(query).then(res => {
+                        if (res) {
+                            setMapCenter([res.lat, res.lon])
+                        }
+                    })
+                }
             }
 
             setLoading(false)
