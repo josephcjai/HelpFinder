@@ -85,7 +85,7 @@ export default function TaskDetailsPage() {
     const handleLogout = () => {
         localStorage.removeItem('token')
         setUser(null)
-        router.push('/')
+        router.push('/login')
     }
 
     if (isEditing) {
@@ -113,15 +113,24 @@ export default function TaskDetailsPage() {
             <Navbar user={user} onLogout={handleLogout} />
             <main className="container py-8">
                 <div className="mb-6">
-                    <button
-                        onClick={() => router.push('/')}
-                        className="btn btn-secondary btn-sm mb-6 gap-2 hover:bg-slate-100 transition-colors"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
-                        Back to Tasks
-                    </button>
+                    <div className="flex gap-4 mb-6">
+                        <button
+                            onClick={() => router.push('/')}
+                            className="btn btn-secondary btn-sm gap-2 hover:bg-slate-100 transition-colors"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M19 12H5M12 19l-7-7 7-7" />
+                            </svg>
+                            Back to Home
+                        </button>
+                        <button
+                            onClick={() => router.push('/profile')}
+                            className="btn btn-secondary btn-sm gap-2 hover:bg-slate-100 transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">person</span>
+                            Back to Dashboard
+                        </button>
+                    </div>
 
                     <div className="flex justify-between items-start">
                         <div>

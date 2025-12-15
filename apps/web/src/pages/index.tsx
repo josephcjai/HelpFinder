@@ -111,6 +111,7 @@ export default function Home() {
   const handleLogout = () => {
     removeToken()
     setUser(null)
+    router.push('/login')
   }
 
   const handleTaskSaved = (savedTask: Task, isEdit: boolean) => {
@@ -140,6 +141,7 @@ export default function Home() {
     }
     setShowCreateForm(true)
   }
+
 
   // --- Filtering Logic ---
   // 1. Base Filter: User Tab, Search Text ONLY (Category is now a soft filter/grouper)

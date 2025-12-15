@@ -140,4 +140,12 @@ export class BidsService {
     // Delete the bid or mark as cancelled? Deleting for now as per "withdraw"
     await this.bidRepo.remove(bid)
   }
+
+  async findByHelper(userId: string): Promise<BidEntity[]> {
+    return this.bidRepo.find({
+      where: { helper: { id: userId } },
+      relations: ['task', 'task.requester'],
+      order: { createdAt: 'DESC' }
+    })
+  }
 }

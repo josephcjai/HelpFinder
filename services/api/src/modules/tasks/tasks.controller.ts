@@ -25,6 +25,18 @@ export class TasksController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('my-created')
+  async getMyCreatedTasks(@Request() req: any): Promise<TaskEntity[]> {
+    return this.tasks.findCreatedBy(req.user.id)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('my-jobs')
+  async getMyJobs(@Request() req: any): Promise<TaskEntity[]> {
+    return this.tasks.findAssignedTo(req.user.id)
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getTask(@Param('id') id: string): Promise<TaskEntity> {
     return this.tasks.findOne(id)

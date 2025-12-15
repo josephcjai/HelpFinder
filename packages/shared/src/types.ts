@@ -56,4 +56,5 @@ export interface Bid {
     createdAt: Date
     helperName?: string // For UI convenience
     helper?: UserProfile
+    task?: Task
 }

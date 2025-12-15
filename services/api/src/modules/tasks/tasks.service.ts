@@ -250,4 +250,25 @@ export class TasksService {
 
     return task
   }
+
+  async findCreatedBy(userId: string): Promise<TaskEntity[]> {
+    return this.repo.find({
+      where: { requesterId: userId },
+      relations: ['bids', 'bids.helper', 'category'],
+      order: { createdAt: 'DESC' }
+    })
+  }
+
+  async findAssignedTo(userId: string): Promise<TaskEntity[]> {
+    // Find tasks where one of the bids is accepted AND the helper is the userId
+    return this.repo.createQueryBuilder('task')
+      .leftJoinAndSelect('task.bids', 'bid')
+      .leftJoinAndSelect('bid.helper', 'helper')
+      .leftJoinAndSelect('task.category', 'category')
+      .leftJoinAndSelect('task.requester', 'requester')
+      .where('bid.status = :status', { status: 'accepted' })
+      .andWhere('helper.id = :userId', { userId })
+      .orderBy('task.updatedAt', 'DESC')
+      .getMany()
+  }
 }

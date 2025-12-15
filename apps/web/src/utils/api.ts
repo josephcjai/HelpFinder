@@ -75,6 +75,14 @@ export const getTasks = async (lat?: number, lng?: number, radius?: number, cate
     throw new Error('Failed to fetch tasks')
 }
 
+export const getTask = async (id: string): Promise<Task> => {
+    const res = await authenticatedFetch(`/tasks/${id}`)
+    if (res.ok) {
+        return res.json()
+    }
+    throw new Error('Failed to fetch task')
+}
+
 export const createTask = async (task: Partial<Task>) => {
     return authenticatedFetch('/tasks', {
         method: 'POST',
@@ -203,6 +211,24 @@ export const getUsers = async () => {
         return res.json()
     }
     throw new Error('Failed to fetch users')
+}
+
+export const getMyCreatedTasks = async (): Promise<Task[]> => {
+    const res = await authenticatedFetch('/tasks/my-created')
+    if (res.ok) return res.json()
+    throw new Error('Failed to fetch my created tasks')
+}
+
+export const getMyJobs = async (): Promise<Task[]> => {
+    const res = await authenticatedFetch('/tasks/my-jobs')
+    if (res.ok) return res.json()
+    throw new Error('Failed to fetch my jobs')
+}
+
+export const getMyBids = async (): Promise<Bid[]> => {
+    const res = await authenticatedFetch('/bids/my-bids')
+    if (res.ok) return res.json()
+    throw new Error('Failed to fetch my bids')
 }
 
 export const deleteUser = async (id: string) => {

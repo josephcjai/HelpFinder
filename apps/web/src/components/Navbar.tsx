@@ -45,8 +45,8 @@ export const Navbar = ({ user, onLogout }: NavbarProps) => {
                             <div className="flex items-center gap-4">
                                 <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Welcome, <b>{user.name}</b></span>
                                 <NotificationBell />
-                                <Link href="/profile" className="text-sm font-medium text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors">
-                                    Profile
+                                <Link href="/profile" className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-wide hover:bg-primary/90 transition-colors">
+                                    My Account
                                 </Link>
                                 {user.role === 'admin' && (
                                     <Link href="/admin" className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
