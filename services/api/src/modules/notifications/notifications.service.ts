@@ -30,4 +30,8 @@ export class NotificationsService {
     async markAllAsRead(userId: string): Promise<void> {
         await this.repo.update({ userId, isRead: false }, { isRead: true })
     }
+
+    async delete(id: string, userId: string): Promise<void> {
+        await this.repo.delete({ id, userId })
+    }
 }

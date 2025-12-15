@@ -131,12 +131,21 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
                         </div>
                     )}
 
-                    {/* Owner/Admin: Edit/Delete */}
-                    {(isOwner || isAdmin) && (
+                    {/* Owner/Admin: Edit/Delete - Only show if open (or admin) */}
+                    {((isOwner && task.status === 'open') || isAdmin) && (
                         <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <button
-                                onClick={(e) => { e.stopPropagation(); onEdit(task) }}
-                                className="btn btn-sm btn-secondary"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const hasActiveBids = task.bids?.some(b => b.status === 'pending' || b.status === 'accepted');
+                                    if (hasActiveBids && !isAdmin) {
+                                        showToast('Cannot edit task while there are active bids. Please reject them first.', 'error')
+                                    } else {
+                                        onEdit(task)
+                                    }
+                                }}
+                                className={`btn btn-sm btn-secondary ${task.bids?.some(b => b.status === 'pending' || b.status === 'accepted') && !isAdmin ? 'opacity-75' : ''}`}
+                                title={task.bids?.some(b => b.status === 'pending' || b.status === 'accepted') && !isAdmin ? "Reject active bids to edit" : "Edit Task"}
                             >
                                 Edit
                             </button>

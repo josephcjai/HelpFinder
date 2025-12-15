@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { authenticatedFetch } from '../utils/api'
+import { authenticatedFetch, deleteNotification } from '../utils/api'
 import Link from 'next/link'
 
 type Notification = {
@@ -120,14 +120,31 @@ export const NotificationBell = () => {
                                                 <span className="text-xs text-slate-400">
                                                     {new Date(notification.createdAt).toLocaleDateString()}
                                                 </span>
-                                                {!notification.isRead && (
+                                                <div className="flex gap-2">
+                                                    {!notification.isRead && (
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleMarkAsRead(notification.id) }}
+                                                            className="text-xs text-blue-600 hover:text-blue-800"
+                                                        >
+                                                            Mark read
+                                                        </button>
+                                                    )}
                                                     <button
-                                                        onClick={() => handleMarkAsRead(notification.id)}
-                                                        className="text-xs text-blue-600 hover:text-blue-800"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            // Optimistic update
+                                                            setNotifications(prev => prev.filter(n => n.id !== notification.id));
+                                                            deleteNotification(notification.id).catch(err => {
+                                                                console.error("Failed to delete", err);
+                                                                // Revert if needed, but for delete usually fine to just log
+                                                            });
+                                                        }}
+                                                        className="text-xs text-red-500 hover:text-red-700"
+                                                        title="Delete"
                                                     >
-                                                        Mark read
+                                                        🗑️
                                                     </button>
-                                                )}
+                                                </div>
                                             </div>
                                             {notification.resourceId && (
                                                 <Link href={`/tasks/${notification.resourceId}`} className="text-xs text-blue-600 hover:underline mt-1 block">

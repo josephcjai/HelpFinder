@@ -6,6 +6,8 @@ import { TaskEntity } from '../../entities/task.entity'
 import { UserEntity } from '../../entities/user.entity'
 import { ContractEntity } from '../../entities/contract.entity'
 
+import { NotificationsService } from '../notifications/notifications.service'
+
 @Injectable()
 export class BidsService {
   constructor(
@@ -15,6 +17,7 @@ export class BidsService {
     private readonly taskRepo: Repository<TaskEntity>,
     @InjectRepository(ContractEntity)
     private readonly contractRepo: Repository<ContractEntity>,
+    private readonly notifications: NotificationsService
   ) { }
 
   async placeBid(taskId: string, helper: UserEntity, amount: number, message?: string): Promise<BidEntity> {
@@ -50,8 +53,8 @@ export class BidsService {
       throw new ForbiddenException('Cannot edit bid when task is not open')
     }
 
-    if (bid.status !== 'pending' && bid.status !== 'accepted') {
-      throw new ForbiddenException('Cannot edit bid that is rejected')
+    if (bid.status !== 'pending' && bid.status !== 'accepted' && bid.status !== 'rejected') {
+      throw new ForbiddenException('Cannot edit bid in this state')
     }
 
     // If bid was accepted, we need to reset the flow (Renegotiation)
@@ -68,6 +71,11 @@ export class BidsService {
       await this.taskRepo.save(bid.task)
 
       // 3. Reset Bid Status
+      bid.status = 'pending'
+    }
+
+    // If bid was rejected, reset to pending (Re-bidding)
+    if (bid.status === 'rejected') {
       bid.status = 'pending'
     }
 
@@ -113,7 +121,50 @@ export class BidsService {
     })
     await this.contractRepo.save(contract)
 
+    // Notify Helper
+    await this.notifications.create({
+      userId: bid.helper.id,
+      message: `Your bid of $${bid.amount} for "${bid.task.title}" has been accepted!`,
+      type: 'success',
+      resourceId: bid.task.id
+    })
+
     return bid
+  }
+
+  async rejectBid(bidId: string, requesterId: string): Promise<BidEntity> {
+    const bid = await this.bidRepo.findOne({
+      where: { id: bidId },
+      relations: ['task', 'task.requester']
+    })
+    if (!bid) throw new NotFoundException('Bid not found')
+
+    if (bid.task.requester.id !== requesterId) {
+      throw new ForbiddenException('Only the task owner can reject bids')
+    }
+
+    if (bid.status === 'accepted') {
+      throw new ForbiddenException('Cannot reject an already accepted bid. Please cancel the contract instead.')
+    }
+
+    bid.status = 'rejected'
+    const savedBid = await this.bidRepo.save(bid)
+
+    // Notify Helper
+    // Load helper if not loaded (relations check)
+    // The previous findOne only loaded task and task.requester. We need helper to notify.
+    // Ideally we should have loaded "helper" in the initial find. Let's fix that too or load it here.
+    const bidWithHelper = await this.bidRepo.findOne({ where: { id: bidId }, relations: ['helper', 'task'] })
+    if (bidWithHelper && bidWithHelper.helper) {
+      await this.notifications.create({
+        userId: bidWithHelper.helper.id,
+        message: `Your bid for "${bidWithHelper.task.title}" was rejected.`,
+        type: 'error',
+        resourceId: bidWithHelper.task.id
+      })
+    }
+
+    return savedBid
   }
 
   async withdrawBid(bidId: string, userId: string): Promise<void> {

@@ -80,11 +80,15 @@ export default function TaskDetailsPage() {
 
     const isOwner = user && user.id === task.requesterId
     const isAdmin = user && user.role === 'admin'
-    const canEdit = (isOwner && task.status === 'open') || isAdmin
+    // Can edit only if open AND no active bids (admin can always edit)
+    // Filter out rejected bids explicitly just in case
+    const hasActiveBids = task.bids ? task.bids.some(b => b.status === 'pending' || b.status === 'accepted') : false
+    console.log('Edit Restriction Debug:', { isOwner, taskStatus: task.status, hasActiveBids, bids: task.bids })
+    const canEdit = (isOwner && task.status === 'open' && !hasActiveBids) || isAdmin
 
     const handleLogout = () => {
         localStorage.removeItem('token')
-        setUser(null)
+        // Do not set user to null here, as it triggers a re-render before navigation
         router.push('/login')
     }
 
@@ -144,9 +148,21 @@ export default function TaskDetailsPage() {
                                 </span>
                             </div>
                         </div>
-                        {canEdit && (
-                            <div className="flex gap-2">
-                                <button onClick={() => setIsEditing(true)} className="btn btn-secondary">Edit</button>
+                        {(isOwner && task.status === 'open' || isAdmin) && (
+                            <div className="flex gap-2 items-center">
+                                <button
+                                    onClick={() => {
+                                        if (hasActiveBids && !isAdmin) {
+                                            showToast('Cannot edit task while there are active bids. Please reject them first.', 'error')
+                                        } else {
+                                            setIsEditing(true)
+                                        }
+                                    }}
+                                    className={`btn btn-secondary ${hasActiveBids && !isAdmin ? 'opacity-75' : ''}`}
+                                    title={hasActiveBids && !isAdmin ? "Reject active bids to edit" : "Edit Task"}
+                                >
+                                    Edit
+                                </button>
                                 <button onClick={() => handleDelete(task)} className="btn btn-danger">Delete</button>
                             </div>
                         )}

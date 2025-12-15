@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Task, UserProfile, Bid } from '@helpfinder/shared'
-import { getBids, placeBid, updateBid, acceptBid, withdrawBid } from '../utils/api'
+import { getBids, placeBid, updateBid, acceptBid, withdrawBid, rejectBid } from '../utils/api'
 import { useToast } from './ui/Toast'
 import { useModal } from './ui/ModalProvider'
 
@@ -88,6 +88,26 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
         })
     }
 
+
+    const handleRejectBid = (bidId: string) => {
+        showConfirmation({
+            title: 'Reject Bid?',
+            message: 'Are you sure you want to reject this bid?',
+            isDangerous: true,
+            confirmText: 'Reject',
+            onConfirm: async () => {
+                try {
+                    await rejectBid(bidId)
+                    showToast('Bid rejected', 'success')
+                    onBidPlaced?.() // Reload logic same as placed
+                    loadBids()
+                } catch (e) {
+                    showToast('Failed to reject bid', 'error')
+                }
+            }
+        })
+    }
+
     // If user is the requester, show received bids
     if (task.requesterId === user.id) {
         return (
@@ -108,11 +128,17 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
                                 </div>
                                 <div className="flex-shrink-0">
                                     {bid.status === 'pending' && task.status === 'open' && (
-                                        <button onClick={() => handleAcceptBid(bid.id)} className="btn btn-sm btn-primary">
-                                            Accept Bid
-                                        </button>
+                                        <div className="flex flex-col gap-2">
+                                            <button onClick={() => handleAcceptBid(bid.id)} className="btn btn-sm btn-primary">
+                                                Accept Bid
+                                            </button>
+                                            <button onClick={() => handleRejectBid(bid.id)} className="btn btn-sm btn-outline-danger">
+                                                Reject
+                                            </button>
+                                        </div>
                                     )}
                                     {bid.status === 'accepted' && <span className="badge badge-success">Accepted</span>}
+                                    {bid.status === 'rejected' && <span className="badge badge-secondary">Rejected</span>}
                                 </div>
                             </div>
                         ))}
@@ -165,14 +191,14 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            {/* Allow editing only if pending */}
-                            {myBid.status === 'pending' && (
+                            {/* Allow editing if pending or rejected */}
+                            {(myBid.status === 'pending' || myBid.status === 'rejected') && (
                                 <>
                                     <button
                                         onClick={() => handleEditBid(myBid)}
                                         className="btn btn-sm btn-secondary bg-white text-xs"
                                     >
-                                        Edit Bid
+                                        {myBid.status === 'rejected' ? 'Bid Again' : 'Edit Bid'}
                                     </button>
                                     <button
                                         onClick={() => handleWithdrawBid(myBid.id)}

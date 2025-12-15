@@ -89,6 +89,12 @@ export class TasksService {
       throw new ForbiddenException('Cannot edit task after a bid has been accepted')
     }
 
+    // Check if there are any active bids (not rejected)
+    const activeBids = task.bids?.filter(b => b.status !== 'rejected')
+    if (activeBids && activeBids.length > 0 && userRole !== 'admin') {
+      throw new ForbiddenException('Cannot edit task while there are active bids. Please reject all bids first.')
+    }
+
     // Check for critical updates if task has an accepted bid
     const acceptedBid = task.bids?.find(b => b.status === 'accepted')
     if (acceptedBid && acceptedBid.helper) {
@@ -141,6 +147,14 @@ export class TasksService {
       await this.contractRepo.save(contract)
     }
 
+    // Notify Requester
+    await this.notifications.create({
+      userId: task.requesterId,
+      message: `Task "${task.title}" has been started by ${acceptedBid.helper?.name || 'the helper'}.`,
+      type: 'info',
+      resourceId: task.id
+    })
+
     return task
   }
 
@@ -183,6 +197,14 @@ export class TasksService {
       await this.contractRepo.save(contract)
     }
 
+    // Notify Requester
+    await this.notifications.create({
+      userId: task.requesterId,
+      message: `Task "${task.title}" marked as done. Please review and approve.`,
+      type: 'success',
+      resourceId: task.id
+    })
+
     return task
   }
 
@@ -200,6 +222,14 @@ export class TasksService {
     if (contract) {
       contract.status = 'approved'
       await this.contractRepo.save(contract)
+
+      // Notify Helper
+      await this.notifications.create({
+        userId: contract.helperId,
+        message: `Great job! Your work on "${task.title}" has been approved.`,
+        type: 'success',
+        resourceId: task.id
+      })
     }
 
     return task
@@ -218,13 +248,21 @@ export class TasksService {
     if (contract) {
       contract.status = 'started'
       await this.contractRepo.save(contract)
+
+      // Notify Helper
+      await this.notifications.create({
+        userId: contract.helperId,
+        message: `Completion rejected for "${task.title}". Please check feedback/requirements.`,
+        type: 'warning',
+        resourceId: task.id
+      })
     }
 
     return task
   }
 
   async reopenTask(taskId: string, userId: string): Promise<TaskEntity> {
-    const task = await this.repo.findOneBy({ id: taskId })
+    const task = await this.repo.findOne({ where: { id: taskId }, relations: ['bids'] })
     if (!task) throw new NotFoundException('Task not found')
     if (task.requesterId !== userId) throw new ForbiddenException('Only the requester can reopen the task')
     if (task.status !== 'completed') throw new BadRequestException('Task is not in completed status')
@@ -237,15 +275,33 @@ export class TasksService {
       throw new BadRequestException('Cannot reopen task after 14 days of completion')
     }
 
-    task.status = 'in_progress'
+    // 1. Reset Task Status
+    task.status = 'open'
     task.completedAt = undefined
     await this.repo.save(task)
 
-    // Update Contract Status
+    // 2. Reject the previously accepted bid (so they can bid again if needed, and others can bid)
+    const acceptedBid = task.bids?.find(b => b.status === 'accepted')
+    if (acceptedBid) {
+      acceptedBid.status = 'rejected'
+      // We need to save the bid. Since we don't have BidRepo injected yet, we can use the manager or add injection.
+      // Using manager is cleaner for quick fix without changing constructor signature excessively.
+      await this.repo.manager.save(BidEntity, acceptedBid)
+    }
+
+    // 3. Update Contract Status
     const contract = await this.contractRepo.findOne({ where: { taskId: task.id } })
     if (contract) {
-      contract.status = 'started'
+      contract.status = 'cancelled'
       await this.contractRepo.save(contract)
+
+      // Notify Helper
+      await this.notifications.create({
+        userId: contract.helperId,
+        message: `Task "${task.title}" has been reopened by the requester. Your contract is cancelled. You may bid again.`,
+        type: 'info',
+        resourceId: task.id
+      })
     }
 
     return task

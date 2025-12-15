@@ -143,6 +143,22 @@ export const withdrawBid = async (bidId: string) => {
     throw new Error('Failed to withdraw bid')
 }
 
+export const rejectBid = async (bidId: string) => {
+    const res = await authenticatedFetch(`/bids/${bidId}/reject`, {
+        method: 'POST'
+    })
+    if (res.ok) {
+        return res.json()
+    }
+    throw new Error('Failed to reject bid')
+}
+
+export const deleteNotification = async (id: string) => {
+    return authenticatedFetch(`/notifications/${id}`, {
+        method: 'DELETE',
+    })
+}
+
 export const acceptBid = async (bidId: string) => {
     const res = await authenticatedFetch(`/bids/${bidId}/accept`, {
         method: 'POST'

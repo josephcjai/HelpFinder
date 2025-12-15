@@ -44,6 +44,11 @@ export class BidsController {
     return this.bidsService.withdrawBid(bidId, req.user.id)
   }
 
+  @Post('bids/:bidId/reject')
+  async rejectBid(@Param('bidId') bidId: string, @Request() req: any) {
+    return this.bidsService.rejectBid(bidId, req.user.id)
+  }
+
   @Get('bids/my-bids')
   async getMyBids(@Request() req: any) {
     return this.bidsService.findByHelper(req.user.id)
