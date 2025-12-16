@@ -38,6 +38,12 @@ export class CategoriesService {
         }
 
         category.name = dto.name
+        if (dto.icon !== undefined) {
+            category.icon = dto.icon
+        }
+        if (dto.color !== undefined) {
+            category.color = dto.color
+        }
         return this.repo.save(category)
     }
 

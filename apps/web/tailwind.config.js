@@ -7,18 +7,21 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                primary: "#1d4ed8", // Royal Blue
-                secondary: "#0f172a", // Deep Indigo/Dark Slate
-                accent: "#f59e0b", // Warm Amber
-                success: "#10b981", // Teal/Green
-                "background-light": "#f3f4f6", // Light Gray/White smoke
-                "background-dark": "#0f172a", // Dark background
-                "card-light": "#ffffff",
-                "card-dark": "#1e293b",
+                primary: "#4F46E5", // Indigo-600 (Updated for Admin Design)
+                secondary: "#0EA5E9", // Sky-500
+                accent: "#F59E0B", // Amber-500
+                danger: "#EF4444", // Red-500
+                success: "#10b981",
+                "background-light": "#F3F4F6", // Gray-100
+                "background-dark": "#0F172A", // Slate-900
+                "surface-light": "#FFFFFF",
+                "surface-dark": "#1E293B", // Slate-800
+                "text-light": "#1F2937", // Gray-800
+                "text-dark": "#F8FAFC", // Slate-50
             },
             fontFamily: {
-                sans: ['Inter', 'sans-serif'],
-                display: ['Outfit', 'sans-serif'],
+                display: ["'Plus Jakarta Sans'", "sans-serif"],
+                body: ["'Inter'", "sans-serif"],
             },
             borderRadius: {
                 DEFAULT: "0.5rem",

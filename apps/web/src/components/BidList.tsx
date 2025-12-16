@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Task, UserProfile, Bid } from '@helpfinder/shared'
 import { getBids, placeBid, updateBid, acceptBid, withdrawBid, rejectBid } from '../utils/api'
+import { authenticatedFetch } from '../utils/api'
+import { UserAvatar } from './UserAvatar'
 import { useToast } from './ui/Toast'
 import { useModal } from './ui/ModalProvider'
 
@@ -120,8 +122,13 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
                                 <div className="flex-1 min-w-[200px]">
                                     <div className="flex items-baseline gap-2 mb-1">
                                         <div className="font-bold text-lg text-primary">${bid.amount}</div>
-                                        <div className="text-xs text-secondary">
-                                            by {bid.helper?.name || bid.helperName || 'Helper'}
+                                        <div className="flex items-center gap-3">
+                                            <UserAvatar user={{ name: bid.helperName, ...bid.helper }} size="md" />
+                                            <div>
+                                                <div className="text-xs text-secondary">
+                                                    {bid.helper?.name || bid.helperName || 'Helper'}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="text-sm text-slate-600 break-words">{bid.message}</div>
@@ -178,14 +185,14 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
         return (
             <div className="mt-4 border-t pt-4">
                 <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
-                    <div className={`absolute top-0 left-0 w-1 h-full ${myBid.status === 'accepted' ? 'bg-green-500' : 'bg-blue-500'}`}></div>
+                    <div className={`absolute top - 0 left - 0 w - 1 h - full ${myBid.status === 'accepted' ? 'bg-green-500' : 'bg-blue-500'} `}></div>
 
                     <div className="flex justify-between items-start mb-4 pl-2">
                         <div>
                             <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Your Bid</h4>
                             <div className="flex items-center gap-2">
                                 <span className="font-bold text-3xl text-slate-800">${myBid.amount}</span>
-                                <span className={`badge badge-${myBid.status === 'accepted' ? 'success' : 'secondary'}`}>
+                                <span className={`badge badge - ${myBid.status === 'accepted' ? 'success' : 'secondary'} `}>
                                     {myBid.status.toUpperCase()}
                                 </span>
                             </div>

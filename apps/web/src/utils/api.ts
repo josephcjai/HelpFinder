@@ -50,14 +50,12 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
     return null
 }
 
-export const updateUserProfile = async (updates: Partial<UserProfile>) => {
+export const updateUserProfile = async (updates: Partial<UserProfile>): Promise<UserProfile> => {
     const res = await authenticatedFetch('/auth/profile', {
         method: 'PATCH',
-        body: JSON.stringify(updates)
+        body: JSON.stringify(updates),
     })
-    if (res.ok) {
-        return res.json()
-    }
+    if (res.ok) return res.json()
     throw new Error('Failed to update profile')
 }
 
@@ -267,19 +265,19 @@ export const getCategories = async (): Promise<Category[]> => {
     throw new Error('Failed to fetch categories')
 }
 
-export const createCategory = async (name: string): Promise<Category> => {
+export const createCategory = async (name: string, icon?: string, color?: string): Promise<Category> => {
     const res = await authenticatedFetch(`/categories`, {
         method: 'POST',
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ name, icon, color })
     })
     if (res.ok) return res.json()
     throw new Error('Failed to create category')
 }
 
-export const updateCategory = async (id: string, name: string): Promise<Category> => {
+export const updateCategory = async (id: string, name: string, icon?: string, color?: string): Promise<Category> => {
     const res = await authenticatedFetch(`/categories/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ name, icon, color })
     })
     if (res.ok) return res.json()
     throw new Error('Failed to update category')

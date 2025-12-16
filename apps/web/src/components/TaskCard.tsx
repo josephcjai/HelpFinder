@@ -1,5 +1,7 @@
 import { Task, UserProfile } from '@helpfinder/shared'
 import { BidList } from './BidList'
+import { UserAvatar } from './UserAvatar'
+import { getCategoryColorClasses } from '../utils/colors'
 import { authenticatedFetch, placeBid, startTask } from '../utils/api'
 import { useToast } from './ui/Toast'
 import { useModal } from './ui/ModalProvider'
@@ -70,9 +72,12 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
                 className="group flex flex-col gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer h-full"
             >
                 <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">
-                        {task.title}
-                    </h3>
+                    <div className="flex items-center gap-3">
+                        {task.requester && <UserAvatar user={task.requester} size="md" />}
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">
+                            {task.title}
+                        </h3>
+                    </div>
                     <span className={`badge ${task.status === 'open' ? 'badge-success' : 'badge-secondary'}`}>
                         {task.status}
                     </span>
@@ -103,7 +108,8 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
                 {/* Category Chip */}
                 {task.category && (
                     <div className="mt-1">
-                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium gap-1 border border-transparent ${getCategoryColorClasses(task.category.color)}`}>
+                            {task.category.icon && <span className="material-icons-round text-[14px]">{task.category.icon}</span>}
                             {task.category.name}
                         </span>
                     </div>

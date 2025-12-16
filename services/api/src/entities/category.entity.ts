@@ -9,6 +9,13 @@ export class CategoryEntity {
     @Column({ unique: true })
     name!: string
 
+    @Column({ nullable: true })
+    icon?: string
+
+    @Column({ nullable: true })
+    color?: string
+
+
     @CreateDateColumn()
     createdAt!: Date
 

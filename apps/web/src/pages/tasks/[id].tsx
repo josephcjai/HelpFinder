@@ -2,6 +2,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { Task, UserProfile } from '@helpfinder/shared'
 import { authenticatedFetch, getUserProfile, getToken } from '../../utils/api'
+import { getCategoryColorClasses } from '../../utils/colors'
 import { Navbar } from '../../components/Navbar'
 import { BidList } from '../../components/BidList'
 import { useTaskOperations } from '../../hooks/useTaskOperations'
@@ -10,6 +11,7 @@ import { CreateTaskForm } from '../../components/CreateTaskForm'
 import { placeBid } from '../../utils/api'
 import { useToast } from '../../components/ui/Toast'
 import { ConfirmModal } from '../../components/ui/ConfirmModal'
+import { UserAvatar } from '../../components/UserAvatar'
 
 const MapComponent = dynamic(() => import('../../components/MapComponent'), { ssr: false })
 
@@ -143,9 +145,16 @@ export default function TaskDetailsPage() {
                                 <span className={`badge badge-${task.status === 'open' ? 'success' : 'secondary'}`}>
                                     {task.status.toUpperCase()}
                                 </span>
-                                <span className="text-secondary text-sm">
-                                    Posted by {task.requester?.name || 'Unknown'}
-                                </span>
+                                <div className="flex items-center gap-2 text-secondary text-sm">
+                                    {task.requester && <UserAvatar user={task.requester} size="sm" />}
+                                    <span>Posted by {task.requester?.name || 'Unknown'}</span>
+                                </div>
+                                {task.category && (
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium gap-1 border border-transparent ${getCategoryColorClasses(task.category.color)}`}>
+                                        {task.category.icon && <span className="material-icons-round text-[14px]">{task.category.icon}</span>}
+                                        {task.category.name}
+                                    </span>
+                                )}
                             </div>
                         </div>
                         {(isOwner && task.status === 'open' || isAdmin) && (

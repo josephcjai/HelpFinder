@@ -33,13 +33,16 @@ export class AuthController {
     @UseGuards(JwtAuthGuard)
     @Patch('profile')
     async updateProfile(@Request() req: any, @Body() body: any) {
-        const updates = {
-            address: body.address,
-            country: body.country,
-            zipCode: body.zipCode,
-            latitude: body.latitude,
-            longitude: body.longitude
-        }
-        return this.authService.updateProfile(req.user.id, updates)
+        const { address, zipCode, country, latitude, longitude, avatarIcon, avatarInitials, avatarColor } = body
+        return this.authService.updateProfile(req.user.id, {
+            address,
+            zipCode,
+            country,
+            latitude,
+            longitude,
+            avatarIcon,
+            avatarInitials,
+            avatarColor
+        })
     }
 }

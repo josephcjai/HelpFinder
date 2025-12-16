@@ -12,6 +12,10 @@ import { geocodeAddress } from '../utils/geocoding'
 // Dynamically import MapComponent to avoid SSR issues
 const MapComponent = dynamic(() => import('../components/MapComponent'), { ssr: false })
 
+import { UserAvatar } from '../components/UserAvatar'
+import { USER_AVATARS, CATEGORY_COLORS } from '@helpfinder/shared'
+import { getCategoryColorClasses } from '../utils/colors'
+
 export default function ProfilePage() {
     const router = useRouter()
     const { showToast } = useToast()
@@ -35,6 +39,12 @@ export default function ProfilePage() {
     const [lng, setLng] = useState<number | undefined>(undefined)
     const [mapCenter, setMapCenter] = useState<[number, number] | undefined>(undefined)
 
+    // Avatar State
+    const [avatarMode, setAvatarMode] = useState<'icon' | 'initials'>('icon')
+    const [avatarIcon, setAvatarIcon] = useState('')
+    const [avatarColor, setAvatarColor] = useState('')
+    const [customInitials, setCustomInitials] = useState('')
+
     useEffect(() => {
         const init = async () => {
             const profile = await getUserProfile()
@@ -50,6 +60,11 @@ export default function ProfilePage() {
             setZipCode(profile.zipCode || '')
             setLat(profile.latitude)
             setLng(profile.longitude)
+            setLng(profile.longitude)
+            setAvatarIcon(profile.avatarIcon || '')
+            setCustomInitials(profile.avatarInitials || '')
+            setAvatarMode(profile.avatarInitials ? 'initials' : 'icon')
+            setAvatarColor(profile.avatarColor || '')
 
             if (profile.latitude && profile.longitude) {
                 setMapCenter([profile.latitude, profile.longitude])
@@ -87,12 +102,16 @@ export default function ProfilePage() {
         e.preventDefault()
         setSaving(true)
         try {
+            // @ts-ignore
             const updated = await updateUserProfile({
                 address,
                 country,
                 zipCode,
                 latitude: lat,
-                longitude: lng
+                longitude: lng,
+                avatarIcon: avatarMode === 'icon' ? avatarIcon : null,
+                avatarInitials: avatarMode === 'initials' ? customInitials : null,
+                avatarColor
             })
             setUser(updated)
             showToast('Profile updated successfully', 'success')
@@ -141,8 +160,102 @@ export default function ProfilePage() {
                 {activeTab === 'settings' ? (
                     <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-100 max-w-3xl mx-auto animate-fade-in">
                         <form onSubmit={handleSave} className="space-y-6">
+
+
+
+
+
+
                             <div className="border-b border-slate-100 pb-6 mb-6">
                                 <h2 className="text-xl font-bold mb-4 font-display">Account Details</h2>
+
+                                <div className="flex flex-col md:flex-row gap-8 mb-8 items-start">
+                                    <div className="flex-shrink-0 flex flex-col items-center gap-3">
+                                        {/* @ts-ignore */}
+                                        <UserAvatar
+                                            user={{
+                                                name: user?.name,
+                                                avatarIcon: avatarMode === 'icon' ? avatarIcon : undefined,
+                                                avatarInitials: avatarMode === 'initials' ? customInitials : undefined,
+                                                avatarColor
+                                            }}
+                                            size="xl"
+                                        />
+                                        <p className="text-xs text-slate-400 font-medium uppercase">Preview</p>
+                                    </div>
+                                    <div className="flex-grow space-y-4 w-full">
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Avatar Type</label>
+                                            <div className="flex bg-slate-100 p-1 rounded-lg mb-4 w-fit">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAvatarMode('icon')}
+                                                    className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${avatarMode === 'icon' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                                >
+                                                    Icon
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAvatarMode('initials')}
+                                                    className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${avatarMode === 'initials' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                                >
+                                                    Initials
+                                                </button>
+                                            </div>
+
+                                            {avatarMode === 'icon' ? (
+                                                <>
+                                                    <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Choose Icon</label>
+                                                    <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border border-slate-200 rounded-xl">
+                                                        {USER_AVATARS.map(icon => (
+                                                            <button
+                                                                key={icon}
+                                                                type="button"
+                                                                onClick={() => setAvatarIcon(icon)}
+                                                                className={`p-2 rounded-lg transition-all ${avatarIcon === icon
+                                                                    ? 'bg-primary text-white shadow-md scale-110'
+                                                                    : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
+                                                                    }`}
+                                                            >
+                                                                <span className="material-icons-round text-xl">{icon}</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Custom Initials</label>
+                                                    <div className="flex gap-4 items-center">
+                                                        <input
+                                                            type="text"
+                                                            maxLength={2}
+                                                            className="input w-32 text-center text-xl font-bold uppercase tracking-widest"
+                                                            placeholder={user?.name?.slice(0, 2).toUpperCase() || "XX"}
+                                                            value={customInitials}
+                                                            onChange={e => setCustomInitials(e.target.value.toUpperCase())}
+                                                        />
+                                                        <p className="text-sm text-slate-500">Enter up to 2 letters.</p>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Theme Color</label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {CATEGORY_COLORS.map(color => (
+                                                    <button
+                                                        key={color}
+                                                        type="button"
+                                                        onClick={() => setAvatarColor(color)}
+                                                        className={`w-8 h-8 rounded-full border border-slate-200 transition-transform ${getCategoryColorClasses(color).split(' ')[0]
+                                                            } ${avatarColor === color ? 'ring-2 ring-offset-2 ring-primary scale-110' : 'hover:scale-110'}`}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="label">Name</label>
@@ -214,7 +327,7 @@ export default function ProfilePage() {
                                 </button>
                             </div>
                         </form>
-                    </div>
+                    </div >
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
                         <div className="lg:col-span-7 flex flex-col gap-10">
@@ -356,7 +469,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 )}
-            </main>
+            </main >
         </>
     )
 }

@@ -24,6 +24,15 @@ export class UserEntity {
   @Column()
   name!: string
 
+  @Column({ nullable: true })
+  avatarIcon?: string
+
+  @Column({ nullable: true, length: 2 })
+  avatarInitials?: string
+
+  @Column({ nullable: true })
+  avatarColor?: string
+
   @Column({ type: 'varchar', default: 'user' })
   role!: UserRole
 

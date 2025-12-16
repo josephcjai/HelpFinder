@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { UserAvatar } from './UserAvatar'
 import { UserProfile } from '@helpfinder/shared'
 import { NotificationBell } from './NotificationBell'
 
@@ -43,10 +44,13 @@ export const Navbar = ({ user, onLogout }: NavbarProps) => {
                             </>
                         ) : (
                             <div className="flex items-center gap-4">
-                                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Welcome, <b>{user.name}</b></span>
                                 <NotificationBell />
-                                <Link href="/profile" className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-wide hover:bg-primary/90 transition-colors">
-                                    My Account
+                                <Link href="/profile" className="flex items-center gap-3 pl-6 border-l border-slate-200 dark:border-slate-700 group">
+                                    <div className="text-right hidden md:block">
+                                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-primary transition-colors">{user.name}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user.role}</p>
+                                    </div>
+                                    <UserAvatar user={user} size="md" className="group-hover:ring-2 ring-primary transition-all" />
                                 </Link>
                                 {user.role === 'admin' && (
                                     <Link href="/admin" className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
