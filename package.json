@@ -9,11 +9,10 @@
   ],
   "scripts": {
     "build": "npm -ws run build",
-    "dev": "npm -w services/api run dev",
-    "dev:web": "npm -w apps/web run dev",
-    "dev:api": "npm -w services/api run dev",
+    "dev": "npm -w @helpfinder/shared run build && npm -w services/api run dev",
+    "dev:web": "npm -w @helpfinder/shared run build && npm -w apps/web run dev",
+    "dev:api": "npm -w @helpfinder/shared run build && npm -w services/api run dev",
     "lint": "npm -ws run lint",
     "typecheck": "npm -ws run typecheck"
   }
 }
-
