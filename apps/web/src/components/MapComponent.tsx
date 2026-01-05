@@ -43,14 +43,13 @@ function LocationMarker({ onSelect, position }: { onSelect?: (lat: number, lng: 
         click(e) {
             if (onSelect) {
                 onSelect(e.latlng.lat, e.latlng.lng)
-                map.flyTo(e.latlng, map.getZoom())
             }
         },
     })
 
     useEffect(() => {
         if (position) {
-            map.setView([position.lat, position.lng], map.getZoom())
+            map.flyTo([position.lat, position.lng], map.getZoom())
         }
     }, [position, map])
 
@@ -75,7 +74,7 @@ export default function MapComponent({ tasks = [], onLocationSelect, selectedLoc
     const router = useRouter()
 
     return (
-        <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%', borderRadius: '1rem' }}>
+        <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%', borderRadius: '1rem', zIndex: 1 }}>
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

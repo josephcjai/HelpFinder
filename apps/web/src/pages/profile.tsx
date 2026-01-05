@@ -304,7 +304,38 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
 
-                                <label className="label mb-2">Default Location (Click map to set)</label>
+                                <label className="label mb-2">Default Location</label>
+                                <div className="flex gap-2 mb-3">
+                                    <input
+                                        type="text"
+                                        className="input flex-grow"
+                                        placeholder="Search for a city or place..."
+                                        onKeyDown={async (e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault()
+                                                const val = (e.target as HTMLInputElement).value
+                                                if (val) {
+                                                    const res = await geocodeAddress(val)
+                                                    if (res) setMapCenter([res.lat, res.lon])
+                                                }
+                                            }
+                                        }}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary px-4"
+                                        onClick={async (e) => {
+                                            const input = (e.currentTarget.previousElementSibling as HTMLInputElement)
+                                            if (input.value) {
+                                                const res = await geocodeAddress(input.value)
+                                                if (res) setMapCenter([res.lat, res.lon])
+                                            }
+                                        }}
+                                    >
+                                        Search
+                                    </button>
+                                </div>
+
                                 <div className="rounded-xl overflow-hidden border border-slate-200" style={{ height: '300px' }}>
                                     <MapComponent
                                         selectedLocation={lat && lng ? { lat, lng } : null}
