@@ -6,14 +6,14 @@ export interface UserProfile {
     name: string
     role: UserRole
     isSuperAdmin?: boolean
-    latitude?: number
-    longitude?: number
+    latitude?: number | null
+    longitude?: number | null
     address?: string
     country?: string
     zipCode?: string
-    avatarIcon?: string
-    avatarInitials?: string
-    avatarColor?: string
+    avatarIcon?: string | null
+    avatarInitials?: string | null
+    avatarColor?: string | null
 }
 
 export const USER_AVATARS = [
@@ -58,8 +58,8 @@ export interface Task {
     category?: Category
     budgetMin?: number
     budgetMax?: number
-    latitude?: number
-    longitude?: number
+    latitude?: number | null
+    longitude?: number | null
     address?: string
     country?: string
     zipCode?: string

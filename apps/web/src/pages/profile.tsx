@@ -35,8 +35,8 @@ export default function ProfilePage() {
     const [address, setAddress] = useState('')
     const [country, setCountry] = useState('')
     const [zipCode, setZipCode] = useState('')
-    const [lat, setLat] = useState<number | undefined>(undefined)
-    const [lng, setLng] = useState<number | undefined>(undefined)
+    const [lat, setLat] = useState<number | undefined | null>(undefined)
+    const [lng, setLng] = useState<number | undefined | null>(undefined)
     const [mapCenter, setMapCenter] = useState<[number, number] | undefined>(undefined)
 
     // Avatar State
@@ -344,7 +344,18 @@ export default function ProfilePage() {
                                         center={mapCenter}
                                     />
                                 </div>
-                                {lat && <p className="text-sm text-secondary mt-2">Selected Coordinates: {lat.toFixed(4)}, {lng?.toFixed(4)}</p>}
+                                {lat && (
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <p className="text-sm text-secondary">Selected Coordinates: {lat.toFixed(4)}, {lng?.toFixed(4)}</p>
+                                        <button
+                                            type="button"
+                                            className="text-red-500 text-xs hover:underline"
+                                            onClick={() => { setLat(null); setLng(null); }}
+                                        >
+                                            Clear Location
+                                        </button>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="pt-6 border-t border-slate-100 flex justify-end">

@@ -21,8 +21,8 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask, initialCate
     const [address, setAddress] = useState('')
     const [country, setCountry] = useState('')
     const [zipCode, setZipCode] = useState('')
-    const [lat, setLat] = useState<number | undefined>(undefined)
-    const [lng, setLng] = useState<number | undefined>(undefined)
+    const [lat, setLat] = useState<number | undefined | null>(undefined)
+    const [lng, setLng] = useState<number | undefined | null>(undefined)
     const [categories, setCategories] = useState<Category[]>([])
     const { showToast } = useToast()
 
@@ -266,7 +266,18 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask, initialCate
                             center={mapCenter}
                         />
                     </div>
-                    {lat && <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Selected Coordinates: {lat.toFixed(4)}, {lng?.toFixed(4)}</p>}
+                    {lat && (
+                        <div className="flex items-center gap-2 mt-2">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Selected Coordinates: {lat.toFixed(4)}, {lng?.toFixed(4)}</p>
+                            <button
+                                type="button"
+                                className="text-red-500 text-xs hover:underline"
+                                onClick={() => { setLat(null); setLng(null); }}
+                            >
+                                Clear Location
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex gap-4 pt-4 border-t border-gray-100 dark:border-gray-700">
