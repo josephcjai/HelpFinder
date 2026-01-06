@@ -19,6 +19,11 @@ export class UsersService {
         return this.repo.findOneBy({ id })
     }
 
+    // Alias for compatibility/expectations
+    async findOne(id: string): Promise<UserEntity | null> {
+        return this.findById(id)
+    }
+
     async create(email: string, passwordHash: string, name: string): Promise<UserEntity> {
         const user = this.repo.create({ email, passwordHash, name })
         return this.repo.save(user)
@@ -48,6 +53,14 @@ export class UsersService {
         if (!user) throw new Error('User not found')
 
         Object.assign(user, updates)
+        Object.assign(user, updates)
+        return this.repo.save(user)
+    }
+
+    async updatePassword(id: string, hash: string): Promise<UserEntity> {
+        const user = await this.repo.findOneBy({ id })
+        if (!user) throw new Error('User not found')
+        user.passwordHash = hash
         return this.repo.save(user)
     }
 

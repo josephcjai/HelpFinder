@@ -8,6 +8,7 @@ import { BidsModule } from './bids/bids.module'
 import { ContractsModule } from './contracts/contracts.module'
 import { NotificationsModule } from './notifications/notifications.module'
 import { AuthModule } from './auth/auth.module'
+import { MailModule } from './mail/mail.module'
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AuthModule } from './auth/auth.module'
     ContractsModule,
     NotificationsModule,
     AuthModule,
+    MailModule,
   ],
 })
 export class AppModule { }

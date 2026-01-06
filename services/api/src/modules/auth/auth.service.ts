@@ -2,12 +2,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 import { UsersService } from '../users/users.service'
+import { MailService } from '../mail/mail.service'
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly usersService: UsersService,
-        private readonly jwtService: JwtService
+        private readonly jwtService: JwtService,
+        private readonly mailService: MailService
     ) { }
 
     async validateUser(email: string, pass: string): Promise<any> {
@@ -38,5 +40,40 @@ export class AuthService {
 
     async updateProfile(userId: string, updates: any) {
         return this.usersService.updateProfile(userId, updates)
+    }
+
+    async forgotPassword(email: string) {
+        const user = await this.usersService.findByEmail(email)
+        if (!user) {
+            // Return true even if user not found to prevent enumeration
+            return { message: 'If email exists, reset link sent' }
+        }
+
+        const payload = { email: user.email, sub: user.id, type: 'reset' }
+        const token = this.jwtService.sign(payload, { expiresIn: '1h' })
+
+        await this.mailService.sendResetPasswordEmail(email, token)
+        return { message: 'If email exists, reset link sent' }
+    }
+
+    async resetPassword(token: string, newPass: string) {
+        try {
+            const payload = this.jwtService.verify(token)
+            if (payload.type !== 'reset') {
+                throw new UnauthorizedException('Invalid token type')
+            }
+
+            const user = await this.usersService.findOne(payload.sub)
+            if (!user) {
+                throw new UnauthorizedException('User not found')
+            }
+
+            const hash = await bcrypt.hash(newPass, 10)
+            await this.usersService.updatePassword(user.id, hash) // Need to ensure updatePassword exists or use generic update
+
+            return { message: 'Password updated successfully' }
+        } catch (e) {
+            throw new UnauthorizedException('Invalid or expired token')
+        }
     }
 }

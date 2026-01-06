@@ -56,7 +56,26 @@ export const updateUserProfile = async (updates: Partial<UserProfile>): Promise<
         body: JSON.stringify(updates),
     })
     if (res.ok) return res.json()
+    if (res.ok) return res.json()
     throw new Error('Failed to update profile')
+}
+
+export const forgotPassword = async (email: string) => {
+    const res = await authenticatedFetch('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+    })
+    if (res.ok) return res.json()
+    throw new Error('Failed to send reset email')
+}
+
+export const resetPassword = async (token: string, newPass: string) => {
+    const res = await authenticatedFetch('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token, newPass })
+    })
+    if (res.ok) return res.json()
+    throw new Error('Failed to reset password')
 }
 
 export const getTasks = async (lat?: number, lng?: number, radius?: number, category?: string): Promise<Task[]> => {
