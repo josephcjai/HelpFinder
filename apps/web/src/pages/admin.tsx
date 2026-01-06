@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import { getUsers, deleteUser, updateUserRole, getUserProfile } from '../utils/api'
+import { getUsers, deleteUser, updateUserRole, getUserProfile, removeToken } from '../utils/api'
 import { UserProfile } from '@helpfinder/shared'
 import { UserAvatar } from '../components/UserAvatar'
+import { Navbar } from '../components/Navbar'
 import { AdminCategoryManager } from '../components/AdminCategoryManager'
 
 type User = {
@@ -18,6 +19,7 @@ export default function AdminDashboard() {
     const [users, setUsers] = useState<User[]>([])
     const [loading, setLoading] = useState(true)
     const [checkingAuth, setCheckingAuth] = useState(true)
+    const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
     const router = useRouter()
 
     useEffect(() => {
@@ -28,6 +30,7 @@ export default function AdminDashboard() {
                     await router.push('/login')
                     return
                 }
+                setCurrentUser(profile)
                 setCheckingAuth(false)
                 loadUsers()
             } catch (error) {
@@ -59,6 +62,11 @@ export default function AdminDashboard() {
         loadUsers()
     }
 
+    const handleLogout = () => {
+        removeToken()
+        router.push('/login')
+    }
+
     // Mock status logic (could be real if backend provided)
     const getUserStatus = (user: User) => 'Active'
     const getStatusColor = (status: string) => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
@@ -74,35 +82,20 @@ export default function AdminDashboard() {
     return (
         <div className="min-h-screen bg-background-light dark:bg-background-dark font-body text-text-light dark:text-text-dark transition-colors duration-300">
             {/* Navbar */}
-            <nav className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-700 bg-surface-light/80 dark:bg-surface-dark/80 backdrop-blur-md">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-primary/10 p-2 rounded-lg">
-                                <span className="material-icons-round text-primary text-2xl">admin_panel_settings</span>
-                            </div>
-                            <span className="font-display font-bold text-xl tracking-tight text-gray-900 dark:text-white">HelpFinder <span className="text-primary">Admin</span></span>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <button className="p-2 rounded-full text-gray-500 hover:text-primary hover:bg-primary/10 transition-colors dark:text-gray-400 dark:hover:text-white">
-                                <span className="material-icons-round">notifications</span>
-                            </button>
-                            <Link href="/profile" className="h-8 w-8 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-sm shadow-glow">
-                                A
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+            <Navbar user={currentUser} onLogout={handleLogout} />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Back Link */}
+                <div className="mb-6">
+                    <Link href="/" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary transition-colors dark:text-gray-400">
+                        <span className="material-icons-round text-base mr-1">arrow_back</span>
+                        Back to Home
+                    </Link>
+                </div>
+
                 {/* Header */}
                 <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <Link href="/" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary mb-2 transition-colors dark:text-gray-400">
-                            <span className="material-icons-round text-base mr-1">arrow_back</span>
-                            Back to Home
-                        </Link>
                         <h1 className="text-3xl md:text-4xl font-display font-bold text-gray-900 dark:text-white tracking-tight">
                             User Management
                         </h1>

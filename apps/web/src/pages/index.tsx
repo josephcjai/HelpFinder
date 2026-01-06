@@ -20,6 +20,7 @@ export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<UserProfile | null>(null)
+  const [isAuthLoading, setIsAuthLoading] = useState(false) // Start false, toggled in effect
   const [categories, setCategories] = useState<Category[]>([])
 
   // New/Edit Task State
@@ -39,27 +40,59 @@ export default function Home() {
 
   useEffect(() => {
     const init = async () => {
-      if (getToken()) {
-        const profile = await getUserProfile()
-        setUser(profile)
+      // 1. Check for token immediately
+      const hasToken = !!getToken()
+      if (hasToken) setIsAuthLoading(true)
 
-        if (profile) {
-          if (profile.latitude && profile.longitude) {
-            setSearchLocation({ lat: profile.latitude, lng: profile.longitude })
-          } else if (profile.zipCode || profile.country) {
-            const query = [profile.zipCode, profile.country].filter(Boolean).join(', ')
-            if (query) {
-              geocodeAddress(query).then(res => {
-                if (res) {
-                  setSearchLocation({ lat: res.lat, lng: res.lon })
-                }
-              })
+      // 2. Parallel Fetch Prep
+      const promises: Promise<any>[] = [
+        getCategories().catch(e => { console.error('Cats fail', e); return [] }),
+        getTasks().catch(e => { console.error('Tasks fail', e); return [] })
+      ]
+
+      let profilePromise: Promise<UserProfile | null> | undefined
+
+      if (hasToken) {
+        profilePromise = getUserProfile().catch(() => null)
+        promises.push(profilePromise as Promise<any>)
+      }
+
+      // 3. Execute concurrently
+      try {
+        const results = await Promise.all(promises)
+        // results[0] = cats, results[1] = tasks, results[2] = profile (maybe)
+
+        setCategories(results[0])
+        setTasks(results[1])
+
+        if (profilePromise) {
+          // Wait for profile specifically if it wasn't the last valid promise?
+          // (It's already awaited in Promise.all)
+          // @ts-ignore
+          const profile = await profilePromise
+          setUser(profile)
+
+          if (profile) {
+            if (profile.latitude && profile.longitude) {
+              setSearchLocation({ lat: profile.latitude, lng: profile.longitude })
+            } else if (profile.zipCode || profile.country) {
+              const query = [profile.zipCode, profile.country].filter(Boolean).join(', ')
+              if (query) {
+                geocodeAddress(query).then(res => {
+                  if (res) {
+                    setSearchLocation({ lat: res.lat, lng: res.lon })
+                  }
+                })
+              }
             }
           }
         }
+      } catch (err) {
+        console.error('Init failure', err)
+      } finally {
+        setLoading(false)
+        setIsAuthLoading(false)
       }
-      loadCategories()
-      loadTasks()
     }
     init()
   }, [])
@@ -185,7 +218,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark font-sans text-gray-900 dark:text-gray-100">
-      <Navbar user={user} onLogout={handleLogout} />
+      <Navbar user={user} onLogout={handleLogout} isLoading={isAuthLoading} />
 
       {/* Main Content */}
       <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
@@ -224,7 +257,9 @@ export default function Home() {
                 Connect with local experts and neighbors to get your tasks done.
               </h2>
               <div className="flex flex-col w-full max-w-lg mx-auto lg:mx-0">
-                {user && (
+                {isAuthLoading ? (
+                  <div className="h-14 w-36 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                ) : user && (
                   <button
                     onClick={handlePostTaskClick}
                     className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-6 bg-primary text-white text-base font-bold leading-normal tracking-wide hover:bg-primary/90 transition-colors shadow-sm"

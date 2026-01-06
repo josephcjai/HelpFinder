@@ -6,9 +6,10 @@ import { NotificationBell } from './NotificationBell'
 interface NavbarProps {
     user: UserProfile | null
     onLogout: () => void
+    isLoading?: boolean
 }
 
-export const Navbar = ({ user, onLogout }: NavbarProps) => {
+export const Navbar = ({ user, onLogout, isLoading }: NavbarProps) => {
     return (
         <div className="w-full border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,7 +27,14 @@ export const Navbar = ({ user, onLogout }: NavbarProps) => {
 
                     {/* Desktop Menu */}
                     <div className="hidden md:flex flex-1 justify-end gap-8 items-center">
-                        {!user ? (
+                        {isLoading ? (
+                            // Loading Skeleton
+                            <div className="flex items-center gap-4 animate-pulse">
+                                <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                <div className="h-10 w-20 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                            </div>
+                        ) : !user ? (
                             <>
                                 <div className="flex items-center gap-9">
                                     <a className="text-sm font-medium text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors" href="#">How it works</a>
