@@ -56,4 +56,17 @@ export class MailService {
         `;
         return this.sendMail(email, subject, html);
     }
+
+    async sendVerificationEmail(email: string, token: string) {
+        const verifyLink = `http://localhost:3000/verify-email?token=${token}`;
+        const subject = 'Verify Your Email - HelpFinder';
+        const html = `
+            <h1>Welcome to HelpFinder!</h1>
+            <p>Please verify your email address to unlock full features.</p>
+            <a href="${verifyLink}" style="padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
+            <p>If the button doesn't work, copy and paste this link:</p>
+            <p>${verifyLink}</p>
+        `;
+        return this.sendMail(email, subject, html);
+    }
 }

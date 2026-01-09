@@ -35,7 +35,61 @@ export class AuthService {
         }
         const hash = await bcrypt.hash(pass, 10)
         const user = await this.usersService.create(email, hash, name)
+
+        // Generate verification token and send email
+        const token = this.jwtService.sign({ email, sub: user.id, type: 'verify' }, { expiresIn: '24h' })
+        await this.mailService.sendVerificationEmail(email, token)
+
         return this.login(user)
+    }
+
+    async verifyEmail(token: string) {
+        try {
+            const payload = this.jwtService.verify(token)
+            if (payload.type !== 'verify') {
+                throw new UnauthorizedException('Invalid token type')
+            }
+
+            const user = await this.usersService.findById(payload.sub)
+            if (!user) {
+                throw new UnauthorizedException('User not found')
+            }
+
+            if (user.isVerified) {
+                return { message: 'Email already verified' }
+            }
+
+            user.isVerified = true
+            await this.usersService.save(user)
+
+            return { message: 'Email verified successfully', success: true }
+        } catch (e) {
+            throw new UnauthorizedException('Invalid or expired verification token')
+        }
+    }
+
+    async resendVerification(email: string) {
+        console.log(`[AuthService] Attempting to resend verification for: ${email}`);
+        const user = await this.usersService.findByEmail(email);
+
+        if (!user) {
+            console.log(`[AuthService] User not found for email: ${email}`);
+            return { message: 'If user exists, email sent' };
+        }
+
+        console.log(`[AuthService] User found: ${user.id}, isVerified: ${user.isVerified}`);
+
+        if (user.isVerified) {
+            console.log(`[AuthService] User already verified.`);
+            return { message: 'Email already verified' };
+        }
+
+        const token = this.jwtService.sign({ email, sub: user.id, type: 'verify' }, { expiresIn: '24h' });
+        console.log(`[AuthService] Generated token, sending email...`);
+        await this.mailService.sendVerificationEmail(email, token);
+        console.log(`[AuthService] Email sent successfully.`);
+
+        return { message: 'Verification email sent' };
     }
 
     async updateProfile(userId: string, updates: any) {

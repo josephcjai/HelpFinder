@@ -42,6 +42,9 @@ export class UserEntity {
   @Column({ default: false })
   isSuperAdmin!: boolean
 
+  @Column({ default: false })
+  isVerified!: boolean
+
   // Address Details
   @Column({ type: 'float', nullable: true })
   latitude?: number

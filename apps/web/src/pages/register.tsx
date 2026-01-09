@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { apiBase } from '../utils/api'
 import Link from 'next/link'
+import { useToast } from '../components/ui/Toast'
 
 export default function Register() {
     const router = useRouter()
@@ -9,6 +10,7 @@ export default function Register() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
+    const { showToast } = useToast()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -27,7 +29,11 @@ export default function Register() {
                 throw new Error(data.message || 'Registration failed')
             }
 
-            router.push('/login')
+            showToast('Registration successful! Please check your email to verify your account.', 'success')
+            // Delay redirect slightly so toast can be seen (optional, but good UX)
+            setTimeout(() => {
+                router.push('/login')
+            }, 2000)
         } catch (err: any) {
             setError(err.message)
         }

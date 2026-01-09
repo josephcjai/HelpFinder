@@ -1,5 +1,6 @@
 
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const nodemailer = require('nodemailer');
 
 async function main() {
@@ -15,8 +16,10 @@ async function main() {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
         },
-        debug: true
+        // debug: true // Commented out to reduce noise
     });
+
+    console.log('Transporter created. Sending mail...');
 
     try {
         const info = await transporter.sendMail({
@@ -26,10 +29,13 @@ async function main() {
             html: '<h1>Success!</h1><p>Your HelpFinder email service is working correctly.</p>',
         });
 
-        console.log('Message sent: %s', info.messageId);
+        console.log('Message sent successfully!');
+        console.log('Message ID:', info.messageId);
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('FATAL ERROR sending email:', error);
+        process.exit(1);
     }
+    console.log('Test finished.');
 }
 
 main().catch(console.error);

@@ -2,7 +2,14 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { getUserProfile, updateUserProfile, getMyCreatedTasks, getMyJobs, getMyBids } from '../utils/api'
+import {
+    getUserProfile,
+    updateUserProfile,
+    resendVerification,
+    getMyCreatedTasks,
+    getMyJobs,
+    getMyBids
+} from '../utils/api'
 import { UserProfile, Task, Bid } from '@helpfinder/shared'
 import { Navbar } from '../components/Navbar'
 import { useToast } from '../components/ui/Toast'
@@ -45,6 +52,23 @@ export default function ProfilePage() {
     const [avatarColor, setAvatarColor] = useState('')
     const [customInitials, setCustomInitials] = useState('')
 
+    const handleResend = async () => {
+        setLoading(true)
+        try {
+            if (user?.email) {
+                await resendVerification(user.email)
+                showToast('Verification email sent!', 'success')
+            } else {
+                showToast('User email not found.', 'error')
+            }
+        } catch (err) {
+            showToast('Failed to send verification email', 'error')
+            console.error(err)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     useEffect(() => {
         const init = async () => {
             const profile = await getUserProfile()
@@ -59,7 +83,6 @@ export default function ProfilePage() {
             setCountry(profile.country || '')
             setZipCode(profile.zipCode || '')
             setLat(profile.latitude)
-            setLng(profile.longitude)
             setLng(profile.longitude)
             setAvatarIcon(profile.avatarIcon || '')
             setCustomInitials(profile.avatarInitials || '')
@@ -247,8 +270,7 @@ export default function ProfilePage() {
                                                         key={color}
                                                         type="button"
                                                         onClick={() => setAvatarColor(color)}
-                                                        className={`w-8 h-8 rounded-full border border-slate-200 transition-transform ${getCategoryColorClasses(color).split(' ')[0]
-                                                            } ${avatarColor === color ? 'ring-2 ring-offset-2 ring-primary scale-110' : 'hover:scale-110'}`}
+                                                        className={`w-8 h-8 rounded-full border border-slate-200 transition-transform ${getCategoryColorClasses(color).split(' ')[0]} ${avatarColor === color ? 'ring-2 ring-offset-2 ring-primary scale-110' : 'hover:scale-110'}`}
                                                     />
                                                 ))}
                                             </div>
@@ -256,14 +278,50 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="flex items-center gap-3">
+                                    {user?.avatarIcon ? (
+                                        <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl text-white shadow-md relative"
+                                            style={{ backgroundColor: user.avatarColor || '#3b82f6' }}>
+                                            <span className="material-icons">{user.avatarIcon}</span>
+                                            {/* Verification Badge on Avatar */}
+                                            {user.isVerified && (
+                                                <span className="absolute bottom-0 right-0 bg-green-500 text-white rounded-full p-0.5 border-2 border-white dark:border-gray-800" title="Verified User">
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </span>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="w-16 h-16 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md relative">
+                                            {user?.avatarInitials}
+                                            {/* Verification Badge on Avatar */}
+                                            {user?.isVerified && (
+                                                <span className="absolute bottom-0 right-0 bg-green-500 text-white rounded-full p-0.5 border-2 border-white dark:border-gray-800" title="Verified User">
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
                                     <div>
-                                        <label className="label">Name</label>
-                                        <input className="input bg-slate-50" value={user?.name} disabled />
-                                    </div>
-                                    <div>
-                                        <label className="label">Email</label>
-                                        <input className="input bg-slate-50" value={user?.email} disabled />
+                                        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                            {user?.name}
+                                            {user?.isVerified ? (
+                                                <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Verified</span>
+                                            ) : (
+                                                <button
+                                                    onClick={handleResend}
+                                                    disabled={loading}
+                                                    className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 text-xs font-semibold px-2 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300 transition-colors"
+                                                    title="Click to resend verification email"
+                                                >
+                                                    {loading ? 'Sending...' : 'Unverified (Resend)'}
+                                                </button>
+                                            )}
+                                        </h2>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{user?.role}</p>
                                     </div>
                                 </div>
                             </div>

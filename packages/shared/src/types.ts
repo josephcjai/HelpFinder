@@ -14,6 +14,7 @@ export interface UserProfile {
     avatarIcon?: string | null
     avatarInitials?: string | null
     avatarColor?: string | null
+    isVerified?: boolean
 }
 
 export const USER_AVATARS = [

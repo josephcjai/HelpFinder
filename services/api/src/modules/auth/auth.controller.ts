@@ -34,6 +34,16 @@ export class AuthController {
         return this.authService.resetPassword(body.token, body.newPass)
     }
 
+    @Post('verify')
+    async verifyEmail(@Body() body: { token: string }) {
+        return this.authService.verifyEmail(body.token)
+    }
+
+    @Post('resend-verification')
+    async resendVerification(@Body() body: { email: string }) {
+        return this.authService.resendVerification(body.email)
+    }
+
     @UseGuards(JwtAuthGuard)
     @Get('profile')
     getProfile(@Request() req: any) {

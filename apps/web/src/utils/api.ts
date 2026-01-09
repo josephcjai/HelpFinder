@@ -75,7 +75,26 @@ export const resetPassword = async (token: string, newPass: string) => {
         body: JSON.stringify({ token, newPass })
     })
     if (res.ok) return res.json()
+    if (res.ok) return res.json()
     throw new Error('Failed to reset password')
+}
+
+export const verifyEmail = async (token: string) => {
+    const res = await authenticatedFetch('/auth/verify', {
+        method: 'POST',
+        body: JSON.stringify({ token })
+    })
+    if (res.ok) return res.json()
+    throw new Error('Verification failed')
+}
+
+export const resendVerification = async (email: string) => {
+    const res = await authenticatedFetch('/auth/resend-verification', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+    })
+    if (res.ok) return res.json()
+    throw new Error('Failed to resend verification')
 }
 
 export const getTasks = async (lat?: number, lng?: number, radius?: number, category?: string): Promise<Task[]> => {
