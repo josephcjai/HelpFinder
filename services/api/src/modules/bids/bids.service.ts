@@ -7,6 +7,7 @@ import { UserEntity } from '../../entities/user.entity'
 import { ContractEntity } from '../../entities/contract.entity'
 
 import { NotificationsService } from '../notifications/notifications.service'
+import { MailService } from '../mail/mail.service'
 
 @Injectable()
 export class BidsService {
@@ -17,7 +18,8 @@ export class BidsService {
     private readonly taskRepo: Repository<TaskEntity>,
     @InjectRepository(ContractEntity)
     private readonly contractRepo: Repository<ContractEntity>,
-    private readonly notifications: NotificationsService
+    private readonly notifications: NotificationsService,
+    private readonly mailService: MailService
   ) { }
 
   async placeBid(taskId: string, helper: UserEntity, amount: number, message?: string): Promise<BidEntity> {
@@ -38,7 +40,19 @@ export class BidsService {
       message,
       status: 'pending'
     })
-    return this.bidRepo.save(bid)
+    const savedBid = await this.bidRepo.save(bid)
+
+    // Notify Requester via Email
+    if (task.requester?.email) {
+      await this.mailService.sendNewBidEmail(
+        task.requester.email,
+        task.title,
+        amount,
+        helper.name
+      )
+    }
+
+    return savedBid
   }
 
   async updateBid(bidId: string, userId: string, amount: number, message?: string): Promise<BidEntity> {
@@ -128,6 +142,13 @@ export class BidsService {
       type: 'success',
       resourceId: bid.task.id
     })
+
+    // Notify Helper via Email
+    await this.mailService.sendBidAcceptedEmail(
+      bid.helper.email,
+      bid.task.title,
+      bid.amount
+    )
 
     return bid
   }

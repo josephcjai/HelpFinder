@@ -279,32 +279,22 @@ export default function ProfilePage() {
                                 </div>
 
                                 <div className="flex items-center gap-3">
-                                    {user?.avatarIcon ? (
-                                        <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl text-white shadow-md relative"
-                                            style={{ backgroundColor: user.avatarColor || '#3b82f6' }}>
-                                            <span className="material-icons">{user.avatarIcon}</span>
-                                            {/* Verification Badge on Avatar */}
-                                            {user.isVerified && (
-                                                <span className="absolute bottom-0 right-0 bg-green-500 text-white rounded-full p-0.5 border-2 border-white dark:border-gray-800" title="Verified User">
-                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </span>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div className="w-16 h-16 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md relative">
-                                            {user?.avatarInitials}
-                                            {/* Verification Badge on Avatar */}
-                                            {user?.isVerified && (
-                                                <span className="absolute bottom-0 right-0 bg-green-500 text-white rounded-full p-0.5 border-2 border-white dark:border-gray-800" title="Verified User">
-                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </span>
-                                            )}
-                                        </div>
-                                    )}
+                                    <div className="relative">
+                                        {/* @ts-ignore */}
+                                        <UserAvatar
+                                            user={user}
+                                            size="lg"
+                                            className="shadow-md"
+                                        />
+                                        {/* Verification Badge on Avatar */}
+                                        {user?.isVerified && (
+                                            <span className="absolute bottom-0 right-0 bg-green-500 text-white rounded-full p-0.5 border-2 border-white dark:border-gray-800" title="Verified User">
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </span>
+                                        )}
+                                    </div>
                                     <div>
                                         <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                             {user?.name}

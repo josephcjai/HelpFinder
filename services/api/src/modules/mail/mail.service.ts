@@ -3,7 +3,7 @@ import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
-    private transporter: nodemailer.Transporter;
+    private transporter: any;
     private readonly logger = new Logger(MailService.name);
 
     constructor() {
@@ -18,18 +18,20 @@ export class MailService {
         });
     }
 
-    async sendMail(to: string, subject: string, html: string) {
+    async sendMail(options: { to: string; subject: string; html: string }) {
+        const { to, subject, html } = options;
         try {
             const info = await this.transporter.sendMail({
-                from: `HelpFinder <${process.env.SMTP_FROM}>`,
-                to,
-                subject,
-                html,
+                from: process.env.SMTP_FROM, // sender address
+                to, // list of receivers
+                subject, // Subject line
+                html, // html body
             });
-            this.logger.log(`Email sent: ${info.messageId}`);
+
+            this.logger.log(`Message sent: ${info.messageId}`);
             return info;
         } catch (error) {
-            this.logger.error('Error sending email', error);
+            this.logger.error("Error sending email", error);
             throw error;
         }
     }
@@ -41,7 +43,7 @@ export class MailService {
       <p>We are excited to have you on board.</p>
       <p>Explore thousands of tasks or find help today.</p>
     `;
-        return this.sendMail(email, subject, html);
+        return this.sendMail({ to: email, subject, html });
     }
 
     async sendResetPasswordEmail(email: string, token: string) {
@@ -49,24 +51,50 @@ export class MailService {
         const subject = 'Reset Your Password - HelpFinder';
         const html = `
             <h1>Password Reset Request</h1>
-            <p>You requested to reset your password. Click the link below to proceed:</p>
+            <p>You requested a password reset. Click the link below to reset your password:</p>
             <a href="${resetLink}" style="padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
-            <p>If you did not request this, please ignore this email.</p>
-            <p>This link will expire in 1 hour.</p>
+            <p>If you didn't request this, please ignore this email.</p>
         `;
-        return this.sendMail(email, subject, html);
+        return this.sendMail({ to: email, subject, html });
     }
 
     async sendVerificationEmail(email: string, token: string) {
-        const verifyLink = `http://localhost:3000/verify-email?token=${token}`;
-        const subject = 'Verify Your Email - HelpFinder';
-        const html = `
-            <h1>Welcome to HelpFinder!</h1>
-            <p>Please verify your email address to unlock full features.</p>
-            <a href="${verifyLink}" style="padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
-            <p>If the button doesn't work, copy and paste this link:</p>
-            <p>${verifyLink}</p>
-        `;
-        return this.sendMail(email, subject, html);
+        const url = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+
+        await this.sendMail({
+            to: email,
+            subject: 'Verify your HelpFinder Email',
+            html: `
+        <h1>Verify your email</h1>
+        <p>Please click the link below to verify your email address:</p>
+        <a href="${url}">Verify Email</a>
+      `,
+        });
+    }
+
+    async sendNewBidEmail(to: string, taskTitle: string, bidAmount: number, helperName: string) {
+        await this.sendMail({
+            to,
+            subject: `New Bid on "${taskTitle}"`,
+            html: `
+                <h1>New Bid Received</h1>
+                <p><strong>${helperName}</strong> has placed a bid of <strong>$${bidAmount}</strong> on your task "<strong>${taskTitle}</strong>".</p>
+                <p>Login to HelpFinder to review and accept the bid.</p>
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}">Go to HelpFinder</a>
+            `
+        });
+    }
+
+    async sendBidAcceptedEmail(to: string, taskTitle: string, bidAmount: number) {
+        await this.sendMail({
+            to,
+            subject: `Bid Accepted: "${taskTitle}"`,
+            html: `
+                <h1>Congratulations!</h1>
+                <p>Your bid of <strong>$${bidAmount}</strong> for "<strong>${taskTitle}</strong>" has been accepted!</p>
+                <p>Please contact the requester to arrange the details.</p>
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}">Go to HelpFinder</a>
+            `
+        });
     }
 }
