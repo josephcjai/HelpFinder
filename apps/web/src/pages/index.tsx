@@ -143,8 +143,8 @@ export default function Home() {
 
   const handleLogout = () => {
     removeToken()
-    // Do not set user to null here, as it triggers a re-render of the landing page before navigation
-    router.push('/login')
+    setUser(null)
+    router.push('/')
   }
 
   const handleTaskSaved = (savedTask: Task, isEdit: boolean) => {

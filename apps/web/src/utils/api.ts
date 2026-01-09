@@ -21,7 +21,7 @@ export const removeToken = () => {
     }
 }
 
-export const authenticatedFetch = async (endpoint: string, options: RequestInit = {}) => {
+export const authenticatedFetch = async (endpoint: string, options: RequestInit = {}, redirectOn401 = true) => {
     const token = getToken()
     const headers = {
         'Content-Type': 'application/json',
@@ -34,7 +34,7 @@ export const authenticatedFetch = async (endpoint: string, options: RequestInit 
         headers,
     })
 
-    if (response.status === 401) {
+    if (response.status === 401 && redirectOn401) {
         removeToken()
         window.location.href = '/login'
     }
@@ -43,7 +43,7 @@ export const authenticatedFetch = async (endpoint: string, options: RequestInit 
 }
 
 export const getUserProfile = async (): Promise<UserProfile | null> => {
-    const res = await authenticatedFetch('/auth/profile')
+    const res = await authenticatedFetch('/auth/profile', {}, false)
     if (res.ok) {
         return res.json()
     }

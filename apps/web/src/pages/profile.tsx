@@ -151,7 +151,7 @@ export default function ProfilePage() {
 
     return (
         <>
-            <Navbar user={user} onLogout={() => { localStorage.removeItem('token'); router.push('/login') }} />
+            <Navbar user={user} onLogout={() => { localStorage.removeItem('token'); router.push('/') }} />
             <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
                 <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>

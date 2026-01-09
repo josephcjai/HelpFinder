@@ -37,9 +37,9 @@ export const Navbar = ({ user, onLogout, isLoading }: NavbarProps) => {
                         ) : !user ? (
                             <>
                                 <div className="flex items-center gap-9">
-                                    <a className="text-sm font-medium text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors" href="#">How it works</a>
-                                    <a className="text-sm font-medium text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors" href="#">Browse tasks</a>
-                                    <a className="text-sm font-medium text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors" href="#">Become an expert</a>
+                                    <Link className="text-sm font-medium text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors" href="/how-it-works">How it works</Link>
+                                    <Link className="text-sm font-medium text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors" href="/#tasks">Browse tasks</Link>
+                                    {/* <a className="text-sm font-medium text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors" href="#">Become an expert</a> */}
                                 </div>
                                 <div className="flex gap-2">
                                     <Link href="/register" className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-wide hover:bg-primary/90 transition-colors">
@@ -52,6 +52,7 @@ export const Navbar = ({ user, onLogout, isLoading }: NavbarProps) => {
                             </>
                         ) : (
                             <div className="flex items-center gap-4">
+                                <Link className="text-sm font-medium text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-primary transition-colors mr-4" href="/how-it-works">How it works</Link>
                                 <NotificationBell />
                                 <Link href="/profile" className="flex items-center gap-3 pl-6 border-l border-slate-200 dark:border-slate-700 group">
                                     <div className="text-right hidden md:block">
