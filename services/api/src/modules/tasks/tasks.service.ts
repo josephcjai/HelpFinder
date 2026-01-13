@@ -8,6 +8,7 @@ import { ContractEntity } from '../../entities/contract.entity'
 import { NotificationsService } from '../notifications/notifications.service'
 import { MailService } from '../mail/mail.service'
 import { CreateTaskDto } from './dto'
+import { checkRateLimit, incrementRateLimit } from '../../common/utils/rate-limit.helper'
 
 @Injectable()
 export class TasksService {
@@ -69,20 +70,13 @@ export class TasksService {
     const user = await this.repo.manager.findOne(UserEntity, { where: { id: requesterId } })
     if (!user) throw new NotFoundException('User not found')
 
-    const now = new Date();
-    const lastSent = user.lastTaskCreatedAt;
-    const isSameDay = lastSent &&
-      lastSent.getDate() === now.getDate() &&
-      lastSent.getMonth() === now.getMonth() &&
-      lastSent.getFullYear() === now.getFullYear();
-
-    if (!isSameDay) {
-      user.tasksCreatedCount = 0;
-    }
-
-    if (user.tasksCreatedCount >= 10) {
-      throw new HttpException('Daily task creation limit reached (10/day). Please try again tomorrow.', 429);
-    }
+    checkRateLimit(
+      user,
+      'tasksCreatedCount',
+      'lastTaskCreatedAt',
+      10,
+      'Daily task creation limit reached (10/day). Please try again tomorrow.'
+    );
 
     const task = this.repo.create({
       requesterId,
@@ -96,8 +90,7 @@ export class TasksService {
     })
 
     // Update user stats
-    user.tasksCreatedCount += 1;
-    user.lastTaskCreatedAt = now;
+    incrementRateLimit(user, 'tasksCreatedCount', 'lastTaskCreatedAt');
     await this.repo.manager.save(user);
 
     return this.repo.save(task)
