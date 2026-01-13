@@ -24,6 +24,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         }
         // Return the fresh user record from DB so profile updates are reflected immediately
         // without requiring re-login
+        if (user.isBlocked) {
+            throw new UnauthorizedException('User is blocked');
+        }
         const { passwordHash, ...result } = user
         return result
     }

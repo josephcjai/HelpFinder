@@ -43,6 +43,9 @@ export class UserEntity {
   isSuperAdmin!: boolean
 
   @Column({ default: false })
+  isBlocked!: boolean
+
+  @Column({ default: false })
   isVerified!: boolean
 
   @Column({ default: 0 })

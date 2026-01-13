@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import { getUsers, deleteUser, updateUserRole, getUserProfile, removeToken } from '../utils/api'
+import { getUsers, deleteUser, updateUserRole, getUserProfile, removeToken, blockUser, unblockUser } from '../utils/api'
 import { UserProfile } from '@helpfinder/shared'
 import { UserAvatar } from '../components/UserAvatar'
 import { Navbar } from '../components/Navbar'
 import { AdminCategoryManager } from '../components/AdminCategoryManager'
+import { ConfirmModal } from '../components/ui/ConfirmModal'
 
 type User = {
     id: string
@@ -13,6 +14,7 @@ type User = {
     name: string
     role: 'user' | 'admin'
     isSuperAdmin?: boolean
+    isBlocked?: boolean
 }
 
 export default function AdminDashboard() {
@@ -20,6 +22,21 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true)
     const [checkingAuth, setCheckingAuth] = useState(true)
     const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
+    const [confirmation, setConfirmation] = useState<{
+        isOpen: boolean
+        title: string
+        message: string
+        action: () => Promise<void>
+        isDangerous: boolean
+        confirmText: string
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        action: async () => { },
+        isDangerous: false,
+        confirmText: 'Confirm'
+    })
     const router = useRouter()
 
     useEffect(() => {
@@ -51,15 +68,47 @@ export default function AdminDashboard() {
         setLoading(false)
     }
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this user?')) return
-        await deleteUser(id)
-        loadUsers()
+    const handleDelete = (user: User) => {
+        setConfirmation({
+            isOpen: true,
+            title: 'Delete User',
+            message: `Are you sure you want to delete ${user.name}? This action cannot be undone.`,
+            confirmText: 'Delete',
+            isDangerous: true,
+            action: async () => {
+                await deleteUser(user.id)
+                loadUsers()
+            }
+        })
     }
 
     const handleRoleChange = async (id: string, newRole: string) => {
         await updateUserRole(id, newRole)
         loadUsers()
+    }
+
+    const handleBlock = (user: User) => {
+        const isBlocked = !!user.isBlocked
+        setConfirmation({
+            isOpen: true,
+            title: isBlocked ? 'Unblock User' : 'Block User',
+            message: `Are you sure you want to ${isBlocked ? 'unblock' : 'block'} ${user.name}?`,
+            confirmText: isBlocked ? 'Unblock' : 'Block',
+            isDangerous: !isBlocked,
+            action: async () => {
+                try {
+                    if (isBlocked) {
+                        await unblockUser(user.id)
+                    } else {
+                        await blockUser(user.id)
+                    }
+                    loadUsers()
+                } catch (error) {
+                    console.error('Failed to update block status', error)
+                    alert('Failed to update block status')
+                }
+            }
+        })
     }
 
     const handleLogout = () => {
@@ -169,12 +218,29 @@ export default function AdminDashboard() {
                                                 {u.isSuperAdmin ? (
                                                     <span className="text-gray-400 dark:text-gray-600 text-xs italic">Protected</span>
                                                 ) : (
-                                                    <button
-                                                        onClick={() => handleDelete(u.id)}
-                                                        className="text-danger hover:text-red-700 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
-                                                    >
-                                                        <span className="material-icons-round text-sm">delete</span> Delete
-                                                    </button>
+                                                    <div className="flex justify-end gap-2">
+                                                        <button
+                                                            onClick={() => handleBlock(u)}
+                                                            className={`px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1 ${u.isBlocked
+                                                                ? 'text-yellow-600 hover:text-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/40'
+                                                                : 'text-gray-600 hover:text-gray-700 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                                }`}
+                                                            title={u.isBlocked ? "Unblock User" : "Block User"}
+                                                        >
+                                                            <span className="material-icons-round text-sm">
+                                                                {u.isBlocked ? 'lock_open' : 'block'}
+                                                            </span>
+                                                            <span className="hidden sm:inline">{u.isBlocked ? 'Unblock' : 'Block'}</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(u)}
+                                                            className="text-danger hover:text-red-700 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
+                                                            title="Delete User"
+                                                        >
+                                                            <span className="material-icons-round text-sm">delete</span>
+                                                            <span className="hidden sm:inline">Delete</span>
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </td>
                                         </tr>
@@ -194,6 +260,19 @@ export default function AdminDashboard() {
 
                 <AdminCategoryManager />
             </div>
+
+            <ConfirmModal
+                isOpen={confirmation.isOpen}
+                title={confirmation.title}
+                message={confirmation.message}
+                confirmText={confirmation.confirmText}
+                isDangerous={confirmation.isDangerous}
+                onConfirm={async () => {
+                    await confirmation.action()
+                    setConfirmation(prev => ({ ...prev, isOpen: false }))
+                }}
+                onCancel={() => setConfirmation(prev => ({ ...prev, isOpen: false }))}
+            />
 
             <footer className="mt-16 py-8 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-surface-dark">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">

@@ -67,4 +67,24 @@ export class UsersService {
     async save(user: UserEntity): Promise<UserEntity> {
         return this.repo.save(user)
     }
+
+    async block(id: string): Promise<UserEntity> {
+        const user = await this.repo.findOneBy({ id })
+        if (!user) throw new Error('User not found')
+
+        if (user.isSuperAdmin) {
+            throw new ForbiddenException('Cannot block Super Admin')
+        }
+
+        user.isBlocked = true
+        return this.repo.save(user)
+    }
+
+    async unblock(id: string): Promise<UserEntity> {
+        const user = await this.repo.findOneBy({ id })
+        if (!user) throw new Error('User not found')
+
+        user.isBlocked = false
+        return this.repo.save(user)
+    }
 }

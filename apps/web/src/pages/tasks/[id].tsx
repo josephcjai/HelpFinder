@@ -204,7 +204,7 @@ export default function TaskDetailsPage() {
                             {task.latitude && task.longitude ? (
                                 <div className="map-container">
                                     <MapComponent
-                                        tasks={[task]}
+                                        tasks={[task] as any}
                                         zoom={15}
                                         center={[task.latitude, task.longitude]}
                                     />

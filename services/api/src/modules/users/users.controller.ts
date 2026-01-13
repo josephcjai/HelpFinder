@@ -47,4 +47,19 @@ export class UsersController {
 
     return this.usersService.updateRole(id, role)
   }
+
+  @Patch(':id/block')
+  @Roles('admin')
+  async blockUser(@Param('id') id: string, @Request() req: any) {
+    if (req.user.id === id) {
+      throw new ForbiddenException('Cannot block yourself')
+    }
+    return this.usersService.block(id)
+  }
+
+  @Patch(':id/unblock')
+  @Roles('admin')
+  async unblockUser(@Param('id') id: string) {
+    return this.usersService.unblock(id)
+  }
 }

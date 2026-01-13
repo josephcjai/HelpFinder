@@ -396,7 +396,7 @@ export default function Home() {
                       />
                     </div>
                     <MapComponent
-                      tasks={mapTasks}
+                      tasks={mapTasks.filter(t => t.latitude != null && t.longitude != null) as any}
                       zoom={13}
                       onLocationSelect={isSearchActive ? (lat, lng) => setSearchLocation({ lat, lng }) : undefined}
                       selectedLocation={searchLocation}

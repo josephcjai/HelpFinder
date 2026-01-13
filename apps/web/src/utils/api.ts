@@ -296,6 +296,18 @@ export const updateUserRole = async (id: string, role: string) => {
     })
 }
 
+export const blockUser = async (id: string) => {
+    return authenticatedFetch(`/users/${id}/block`, {
+        method: 'PATCH'
+    })
+}
+
+export const unblockUser = async (id: string) => {
+    return authenticatedFetch(`/users/${id}/unblock`, {
+        method: 'PATCH'
+    })
+}
+
 // Categories
 export const getCategories = async (): Promise<Category[]> => {
     const res = await authenticatedFetch(`/categories`)
