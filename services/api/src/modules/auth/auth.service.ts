@@ -36,6 +36,11 @@ export class AuthService {
         const hash = await bcrypt.hash(pass, 10)
         const user = await this.usersService.create(email, hash, name)
 
+        // Initialize tracking
+        user.verificationEmailsSentCount = 1;
+        user.lastVerificationEmailSentAt = new Date();
+        await this.usersService.save(user);
+
         // Generate verification token and send email
         const token = this.jwtService.sign({ email, sub: user.id, type: 'verify' }, { expiresIn: '24h' })
         await this.mailService.sendVerificationEmail(email, token)
@@ -84,10 +89,34 @@ export class AuthService {
             return { message: 'Email already verified' };
         }
 
+        const now = new Date();
+        const lastSent = user.lastVerificationEmailSentAt;
+        const isSameDay = lastSent &&
+            lastSent.getDate() === now.getDate() &&
+            lastSent.getMonth() === now.getMonth() &&
+            lastSent.getFullYear() === now.getFullYear();
+
+        if (!isSameDay) {
+            // Reset count for new day
+            user.verificationEmailsSentCount = 0;
+        }
+
+        if (user.verificationEmailsSentCount >= 10) {
+            console.warn(`[AuthService] Rate limit exceeded for user: ${email}`);
+            throw new UnauthorizedException('Too many verification requests. Please try again tomorrow.');
+        }
+
         const token = this.jwtService.sign({ email, sub: user.id, type: 'verify' }, { expiresIn: '24h' });
+
         console.log(`[AuthService] Generated token, sending email...`);
         await this.mailService.sendVerificationEmail(email, token);
-        console.log(`[AuthService] Email sent successfully.`);
+
+        // Update user stats
+        user.verificationEmailsSentCount += 1;
+        user.lastVerificationEmailSentAt = now;
+        await this.usersService.save(user);
+
+        console.log(`[AuthService] Email sent successfully. Count: ${user.verificationEmailsSentCount}`);
 
         return { message: 'Verification email sent' };
     }

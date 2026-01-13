@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common'
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, HttpException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, Brackets } from 'typeorm'
 import { TaskEntity } from '../../entities/task.entity'
 import { BidEntity } from '../../entities/bid.entity'
+import { UserEntity } from '../../entities/user.entity'
 import { ContractEntity } from '../../entities/contract.entity'
 import { NotificationsService } from '../notifications/notifications.service'
+import { MailService } from '../mail/mail.service'
 import { CreateTaskDto } from './dto'
 
 @Injectable()
@@ -14,7 +16,8 @@ export class TasksService {
     private readonly repo: Repository<TaskEntity>,
     @InjectRepository(ContractEntity)
     private readonly contractRepo: Repository<ContractEntity>,
-    private readonly notifications: NotificationsService
+    private readonly notifications: NotificationsService,
+    private readonly mailService: MailService
   ) { }
 
   async findAll(lat?: number, lng?: number, radiusInKm: number = 50, category?: string): Promise<TaskEntity[]> {
@@ -63,6 +66,24 @@ export class TasksService {
   }
 
   async create(requesterId: string, dto: CreateTaskDto): Promise<TaskEntity> {
+    const user = await this.repo.manager.findOne(UserEntity, { where: { id: requesterId } })
+    if (!user) throw new NotFoundException('User not found')
+
+    const now = new Date();
+    const lastSent = user.lastTaskCreatedAt;
+    const isSameDay = lastSent &&
+      lastSent.getDate() === now.getDate() &&
+      lastSent.getMonth() === now.getMonth() &&
+      lastSent.getFullYear() === now.getFullYear();
+
+    if (!isSameDay) {
+      user.tasksCreatedCount = 0;
+    }
+
+    if (user.tasksCreatedCount >= 10) {
+      throw new HttpException('Daily task creation limit reached (10/day). Please try again tomorrow.', 429);
+    }
+
     const task = this.repo.create({
       requesterId,
       ...dto,
@@ -73,6 +94,12 @@ export class TasksService {
       country: dto.country,
       zipCode: dto.zipCode,
     })
+
+    // Update user stats
+    user.tasksCreatedCount += 1;
+    user.lastTaskCreatedAt = now;
+    await this.repo.manager.save(user);
+
     return this.repo.save(task)
   }
 
@@ -155,6 +182,12 @@ export class TasksService {
       resourceId: task.id
     })
 
+    // Load Requester email
+    const requester = await this.repo.manager.findOne(UserEntity, { where: { id: task.requesterId } })
+    if (requester?.email) {
+      await this.mailService.sendTaskStartedEmail(requester.email, task.title, acceptedBid.helper?.name || 'Helper')
+    }
+
     return task
   }
 
@@ -205,6 +238,12 @@ export class TasksService {
       resourceId: task.id
     })
 
+    // Load Requester email
+    const requester = await this.repo.manager.findOne(UserEntity, { where: { id: task.requesterId } })
+    if (requester?.email) {
+      await this.mailService.sendCompletionRequestedEmail(requester.email, task.title, acceptedBid.helper?.name || 'Helper')
+    }
+
     return task
   }
 
@@ -230,6 +269,12 @@ export class TasksService {
         type: 'success',
         resourceId: task.id
       })
+
+      // Load Helper email
+      const helper = await this.repo.manager.findOne(UserEntity, { where: { id: contract.helperId } })
+      if (helper?.email) {
+        await this.mailService.sendCompletionApprovedEmail(helper.email, task.title)
+      }
     }
 
     return task
@@ -256,6 +301,12 @@ export class TasksService {
         type: 'warning',
         resourceId: task.id
       })
+
+      // Load Helper email
+      const helper = await this.repo.manager.findOne(UserEntity, { where: { id: contract.helperId } })
+      if (helper?.email) {
+        await this.mailService.sendCompletionRejectedEmail(helper.email, task.title)
+      }
     }
 
     return task
@@ -302,6 +353,12 @@ export class TasksService {
         type: 'info',
         resourceId: task.id
       })
+
+      // Load Helper email
+      const helper = await this.repo.manager.findOne(UserEntity, { where: { id: contract.helperId } })
+      if (helper?.email) {
+        await this.mailService.sendTaskReopenedEmail(helper.email, task.title)
+      }
     }
 
     return task

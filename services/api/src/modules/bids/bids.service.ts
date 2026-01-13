@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common'
+import { Injectable, NotFoundException, ForbiddenException, HttpException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { BidEntity } from '../../entities/bid.entity'
@@ -33,6 +33,22 @@ export class BidsService {
       throw new ForbiddenException('Task is not open for bidding')
     }
 
+    // Rate Limiting Check
+    const now = new Date();
+    const lastBid = helper.lastBidPlacedAt;
+    const isSameDay = lastBid &&
+      lastBid.getDate() === now.getDate() &&
+      lastBid.getMonth() === now.getMonth() &&
+      lastBid.getFullYear() === now.getFullYear();
+
+    if (!isSameDay) {
+      helper.bidsPlacedCount = 0;
+    }
+
+    if (helper.bidsPlacedCount >= 50) {
+      throw new HttpException('Daily bidding limit reached (50/day). Please try again tomorrow.', 429);
+    }
+
     const bid = this.bidRepo.create({
       task,
       helper,
@@ -41,6 +57,11 @@ export class BidsService {
       status: 'pending'
     })
     const savedBid = await this.bidRepo.save(bid)
+
+    // Update rate limit stats
+    helper.bidsPlacedCount = (helper.bidsPlacedCount || 0) + 1;
+    helper.lastBidPlacedAt = now;
+    await this.bidRepo.manager.save(helper);
 
     // Notify Requester via Email
     if (task.requester?.email) {

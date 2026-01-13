@@ -2,16 +2,24 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { Navbar } from '../components/Navbar'
 import { Footer } from '../components/Footer'
-import { getUserProfile } from '../utils/api'
+import { getUserProfile, removeToken } from '../utils/api'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
 import { UserProfile } from '@helpfinder/shared'
 
 export default function HowItWorks() {
+    const router = useRouter()
     const [user, setUser] = useState<UserProfile | null>(null)
 
     useEffect(() => {
         getUserProfile().then(setUser).catch(() => setUser(null))
     }, [])
+
+    const handleLogout = () => {
+        removeToken()
+        setUser(null)
+        router.push('/')
+    }
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-background-dark font-sans text-gray-900 dark:text-gray-100">
@@ -19,7 +27,7 @@ export default function HowItWorks() {
                 <title>How it Works | HelpFinder</title>
             </Head>
 
-            <Navbar user={user} onLogout={() => { }} />
+            <Navbar user={user} onLogout={handleLogout} />
 
             <main className="flex-grow">
                 {/* Hero Section */}

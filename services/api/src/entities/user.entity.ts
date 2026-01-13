@@ -45,6 +45,24 @@ export class UserEntity {
   @Column({ default: false })
   isVerified!: boolean
 
+  @Column({ default: 0 })
+  verificationEmailsSentCount!: number
+
+  @Column({ type: 'timestamp', nullable: true })
+  lastVerificationEmailSentAt?: Date
+
+  @Column({ default: 0 })
+  tasksCreatedCount!: number
+
+  @Column({ type: 'timestamp', nullable: true })
+  lastTaskCreatedAt?: Date
+
+  @Column({ default: 0 })
+  bidsPlacedCount!: number
+
+  @Column({ type: 'timestamp', nullable: true })
+  lastBidPlacedAt?: Date
+
   // Address Details
   @Column({ type: 'float', nullable: true })
   latitude?: number
