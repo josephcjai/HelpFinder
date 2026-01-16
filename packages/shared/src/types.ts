@@ -16,6 +16,10 @@ export interface UserProfile {
     avatarColor?: string | null
     isVerified?: boolean
     isBlocked?: boolean
+    helperRating?: number
+    helperRatingCount?: number
+    requesterRating?: number
+    requesterRatingCount?: number
 }
 
 export const USER_AVATARS = [
@@ -86,4 +90,17 @@ export interface Bid {
     helperName?: string // For UI convenience
     helper?: UserProfile
     task?: Task
+}
+
+export interface Review {
+    id: string
+    taskId: string
+    task?: Task
+    reviewerId: string
+    reviewer?: UserProfile
+    targetUserId: string
+    targetRole: 'helper' | 'requester'
+    rating: number
+    comment?: string
+    createdAt: Date
 }

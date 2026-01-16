@@ -5,6 +5,7 @@ import { authenticatedFetch } from '../utils/api'
 import { UserAvatar } from './UserAvatar'
 import { useToast } from './ui/Toast'
 import { useModal } from './ui/ModalProvider'
+import { ReviewsListModal } from './ReviewsListModal'
 
 interface BidListProps {
     task: Task
@@ -19,6 +20,10 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
     const [bidMessage, setBidMessage] = useState('')
     const [showBidForm, setShowBidForm] = useState(false)
     const [editingBidId, setEditingBidId] = useState<string | null>(null)
+
+    // Reviews Modal State
+    const [reviewModalOpen, setReviewModalOpen] = useState(false)
+    const [selectedReviewUser, setSelectedReviewUser] = useState<{ id: string, name: string } | null>(null)
 
     const { showToast } = useToast()
     const { showConfirmation } = useModal()
@@ -110,6 +115,11 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
         })
     }
 
+    const openReviews = (helperId: string, helperName: string) => {
+        setSelectedReviewUser({ id: helperId, name: helperName })
+        setReviewModalOpen(true)
+    }
+
     // If user is the requester, show received bids
     if (task.requesterId === user.id) {
         return (
@@ -128,6 +138,15 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
                                                 <div className="text-xs text-secondary">
                                                     {bid.helper?.name || bid.helperName || 'Helper'}
                                                 </div>
+                                                {/* Helper Rating */}
+                                                <button
+                                                    onClick={() => bid.helperId && openReviews(bid.helperId, bid.helperName || bid.helper?.name || 'Helper')}
+                                                    className="flex items-center gap-1 text-xs text-yellow-500 hover:text-yellow-600 transition-colors cursor-pointer"
+                                                >
+                                                    <span className="material-icons-round text-[12px]">star</span>
+                                                    <span className="font-bold">{bid.helper?.helperRating?.toFixed(1) || '0.0'}</span>
+                                                    <span className="text-slate-400 hover:text-slate-500">({bid.helper?.helperRatingCount || 0})</span>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -150,6 +169,16 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
                             </div>
                         ))}
                     </div>
+                )}
+                {/* Reviews Modal */}
+                {selectedReviewUser && (
+                    <ReviewsListModal
+                        isOpen={reviewModalOpen}
+                        onClose={() => setReviewModalOpen(false)}
+                        userId={selectedReviewUser.id}
+                        userName={selectedReviewUser.name}
+                        initialRole="helper"
+                    />
                 )}
             </div>
         )

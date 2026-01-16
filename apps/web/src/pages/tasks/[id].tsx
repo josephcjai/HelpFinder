@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { Task, UserProfile } from '@helpfinder/shared'
-import { authenticatedFetch, getUserProfile, getToken } from '../../utils/api'
+import { authenticatedFetch, getUserProfile, getToken, getTask } from '../../utils/api'
 import { getCategoryColorClasses } from '../../utils/colors'
 import { Navbar } from '../../components/Navbar'
 import { BidList } from '../../components/BidList'
@@ -11,7 +11,11 @@ import { CreateTaskForm } from '../../components/CreateTaskForm'
 import { placeBid } from '../../utils/api'
 import { useToast } from '../../components/ui/Toast'
 import { ConfirmModal } from '../../components/ui/ConfirmModal'
+
 import { UserAvatar } from '../../components/UserAvatar'
+import { ReviewModal } from '../../components/ReviewModal'
+import { ReviewsListModal } from '../../components/ReviewsListModal'
+import { createReview } from '../../utils/api'
 
 const MapComponent = dynamic(() => import('../../components/MapComponent'), { ssr: false })
 
@@ -23,7 +27,44 @@ export default function TaskDetailsPage() {
     const [loading, setLoading] = useState(true)
     const [isEditing, setIsEditing] = useState(false)
     const [showAcceptConfirm, setShowAcceptConfirm] = useState(false)
+    const [showReviewModal, setShowReviewModal] = useState(false)
+    const [submittingReview, setSubmittingReview] = useState(false)
     const { showToast } = useToast()
+
+    // Reviews List Modal (viewing reviews)
+    const [showReviewsListModal, setShowReviewsListModal] = useState(false)
+    const [reviewsListTargetId, setReviewsListTargetId] = useState('')
+    const [reviewsListTargetName, setReviewsListTargetName] = useState('')
+
+    const handleReviewSubmit = async (rating: number, comment: string) => {
+        if (!task || !user) return
+        setSubmittingReview(true)
+
+        try {
+            // Determine role and target user
+            const acceptedBid = task.bids?.find(b => b.status === 'accepted')
+            let targetRole: 'helper' | 'requester' = 'helper'
+            let targetUserId: string = ''
+
+            if (user.id === task.requesterId) {
+                if (!acceptedBid) throw new Error('No accepted bid found')
+                targetRole = 'helper'
+                targetUserId = acceptedBid.helperId
+            } else {
+                targetRole = 'requester'
+                targetUserId = task.requesterId
+            }
+
+            await createReview(task.id, targetUserId, targetRole, rating, comment)
+            showToast('Review submitted successfully!', 'success')
+            setShowReviewModal(false)
+            // TODO: Ideally we should mark as reviewed locally to hide button
+        } catch (e) {
+            showToast('Failed to submit review. You may have already reviewed this task.', 'error')
+        } finally {
+            setSubmittingReview(false)
+        }
+    }
 
     const loadTask = async () => {
         if (!id) return
@@ -77,20 +118,24 @@ export default function TaskDetailsPage() {
         }
     }
 
+    const openReviewsList = (userId: string, name: string) => {
+        setReviewsListTargetId(userId)
+        setReviewsListTargetName(name)
+        setShowReviewsListModal(true)
+    }
+
     if (loading) return <div className="flex justify-center p-12">Loading...</div>
     if (!task) return null
 
     const isOwner = user && user.id === task.requesterId
     const isAdmin = user && user.role === 'admin'
     // Can edit only if open AND no active bids (admin can always edit)
-    // Filter out rejected bids explicitly just in case
     const hasActiveBids = task.bids ? task.bids.some(b => b.status === 'pending' || b.status === 'accepted') : false
-    console.log('Edit Restriction Debug:', { isOwner, taskStatus: task.status, hasActiveBids, bids: task.bids })
+
     const canEdit = (isOwner && task.status === 'open' && !hasActiveBids) || isAdmin
 
     const handleLogout = () => {
         localStorage.removeItem('token')
-        // Do not set user to null here, as it triggers a re-render before navigation
         router.push('/login')
     }
 
@@ -147,7 +192,18 @@ export default function TaskDetailsPage() {
                                 </span>
                                 <div className="flex items-center gap-2 text-secondary text-sm">
                                     {task.requester && <UserAvatar user={task.requester} size="sm" />}
-                                    <span>Posted by {task.requester?.name || 'Unknown'}</span>
+                                    <div className="flex flex-col">
+                                        <span>Posted by {task.requester?.name || 'Unknown'}</span>
+                                        {/* Requester Rating */}
+                                        <button
+                                            onClick={() => task.requesterId && openReviewsList(task.requesterId, task.requester?.name || 'Requester')}
+                                            className="flex items-center gap-1 text-xs text-yellow-500 hover:text-yellow-600 transition-colors cursor-pointer"
+                                        >
+                                            <span className="material-icons-round text-[12px]">star</span>
+                                            <span className="font-bold">{task.requester?.requesterRating?.toFixed(1) || '0.0'}</span>
+                                            <span className="text-slate-400 hover:text-slate-500">({task.requester?.requesterRatingCount || 0})</span>
+                                        </button>
+                                    </div>
                                 </div>
                                 {task.category && (
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium gap-1 border border-transparent ${getCategoryColorClasses(task.category.color)}`}>
@@ -299,6 +355,20 @@ export default function TaskDetailsPage() {
                                         </button>
                                     )}
 
+                                    {/* Leave Review - For both Requester and Helper when completed */}
+                                    {task.status === 'completed' && (
+                                        (task.requesterId === user.id) ||
+                                        (task.bids?.some(b => b.status === 'accepted' && b.helperId === user.id))
+                                    ) && (
+                                            <button
+                                                onClick={() => setShowReviewModal(true)}
+                                                className="btn btn-primary w-full mt-2 bg-gradient-to-r from-yellow-500 to-amber-500 border-none text-white shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50"
+                                            >
+                                                <span className="material-icons-round text-sm mr-2">star</span>
+                                                Leave Review
+                                            </button>
+                                        )}
+
                                     {/* Fallback if no actions */}
                                     {task.status === 'open' && !canEdit && (
                                         <p className="text-sm text-secondary">
@@ -310,7 +380,7 @@ export default function TaskDetailsPage() {
                         )}
                     </div>
                 </div>
-            </main>
+            </main >
 
             <ConfirmModal
                 isOpen={showAcceptConfirm}
@@ -319,6 +389,23 @@ export default function TaskDetailsPage() {
                 title="Accept Offer Price"
                 message={`Are you sure you want to bid $${task?.budgetMin} for this task?`}
                 confirmText="Yes, Place Bid"
+            />
+
+            <ReviewModal
+                isOpen={showReviewModal}
+                onClose={() => setShowReviewModal(false)}
+                onSubmit={handleReviewSubmit}
+                title="Rate Your Experience"
+                isSubmitting={submittingReview}
+            />
+
+            {/* New Reviews List Modal (Read) */}
+            <ReviewsListModal
+                isOpen={showReviewsListModal}
+                onClose={() => setShowReviewsListModal(false)}
+                userId={reviewsListTargetId}
+                userName={reviewsListTargetName}
+                initialRole={reviewsListTargetId === task.requesterId ? "requester" : "helper"}
             />
         </>
     )

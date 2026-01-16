@@ -308,6 +308,23 @@ export const unblockUser = async (id: string) => {
     })
 }
 
+export const createReview = async (
+    taskId: string,
+    targetUserId: string,
+    targetRole: 'helper' | 'requester',
+    rating: number,
+    comment?: string
+): Promise<any> => {
+    return authenticatedFetch(`/reviews`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ taskId, targetUserId, targetRole, rating, comment }),
+    })
+}
+
+
 // Categories
 export const getCategories = async (): Promise<Category[]> => {
     const res = await authenticatedFetch(`/categories`)

@@ -66,6 +66,19 @@ export class UserEntity {
   @Column({ type: 'timestamp', nullable: true })
   lastBidPlacedAt?: Date
 
+  // Ratings
+  @Column({ type: 'float', default: 0 })
+  helperRating!: number
+
+  @Column({ type: 'int', default: 0 })
+  helperRatingCount!: number
+
+  @Column({ type: 'float', default: 0 })
+  requesterRating!: number
+
+  @Column({ type: 'int', default: 0 })
+  requesterRatingCount!: number
+
   // Address Details
   @Column({ type: 'float', nullable: true })
   latitude?: number

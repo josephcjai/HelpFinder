@@ -18,14 +18,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     async validate(payload: any) {
+        console.log('JwtStrategy.validate checking payload:', payload)
         const user = await this.usersService.findById(payload.sub)
         if (!user) {
-            throw new UnauthorizedException('User no longer exists')
+            console.error('JwtStrategy: User not found for payload', payload)
+            throw new UnauthorizedException()
         }
-        // Return the fresh user record from DB so profile updates are reflected immediately
-        // without requiring re-login
         if (user.isBlocked) {
-            throw new UnauthorizedException('User is blocked');
+            console.error('JwtStrategy: User is blocked', user.id)
+            throw new UnauthorizedException('User is blocked')
         }
         const { passwordHash, ...result } = user
         return result

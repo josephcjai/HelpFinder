@@ -13,6 +13,7 @@ import {
 import { UserProfile, Task, Bid } from '@helpfinder/shared'
 import { Navbar } from '../components/Navbar'
 import { useToast } from '../components/ui/Toast'
+import { ReviewsListModal } from '../components/ReviewsListModal'
 
 import { geocodeAddress } from '../utils/geocoding'
 
@@ -29,6 +30,10 @@ export default function ProfilePage() {
     const [user, setUser] = useState<UserProfile | null>(null)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+
+    // Reviews Modal State
+    const [showReviewsModal, setShowReviewsModal] = useState(false)
+    const [reviewsModalRole, setReviewsModalRole] = useState<'helper' | 'requester'>('helper')
 
     // Tabs
     const [activeTab, setActiveTab] = useState<'settings' | 'activity'>('activity')
@@ -51,6 +56,12 @@ export default function ProfilePage() {
     const [avatarIcon, setAvatarIcon] = useState('')
     const [avatarColor, setAvatarColor] = useState('')
     const [customInitials, setCustomInitials] = useState('')
+
+
+    const openReviews = (role: 'helper' | 'requester') => {
+        setReviewsModalRole(role);
+        setShowReviewsModal(true);
+    };
 
     const handleResend = async () => {
         setLoading(true)
@@ -312,6 +323,28 @@ export default function ProfilePage() {
                                             )}
                                         </h2>
                                         <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{user?.role}</p>
+                                        <div className="flex flex-wrap gap-4 mt-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => openReviews('helper')}
+                                                className="flex items-center gap-1 text-sm bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/10 dark:hover:bg-yellow-900/20 px-2 py-1 rounded-lg border border-yellow-100 dark:border-yellow-900/30 transition-colors cursor-pointer"
+                                            >
+                                                <span className="material-icons-round text-yellow-500 text-sm">star</span>
+                                                <span className="font-bold text-slate-700 dark:text-slate-200">{user?.helperRating?.toFixed(1) || '0.0'}</span>
+                                                <span className="text-slate-400 text-xs">({user?.helperRatingCount || 0} reviews)</span>
+                                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide ml-1">Helper</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => openReviews('requester')}
+                                                className="flex items-center gap-1 text-sm bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/10 dark:hover:bg-blue-900/20 px-2 py-1 rounded-lg border border-blue-100 dark:border-blue-900/30 transition-colors cursor-pointer"
+                                            >
+                                                <span className="material-icons-round text-blue-500 text-sm">star</span>
+                                                <span className="font-bold text-slate-700 dark:text-slate-200">{user?.requesterRating?.toFixed(1) || '0.0'}</span>
+                                                <span className="text-slate-400 text-xs">({user?.requesterRatingCount || 0} reviews)</span>
+                                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide ml-1">Requester</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -560,6 +593,15 @@ export default function ProfilePage() {
                     </div>
                 )}
             </main >
+            {user && (
+                <ReviewsListModal
+                    isOpen={showReviewsModal}
+                    onClose={() => setShowReviewsModal(false)}
+                    userId={user.id}
+                    userName={user.name}
+                    initialRole={reviewsModalRole}
+                />
+            )}
         </>
     )
 }
