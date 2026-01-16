@@ -145,6 +145,24 @@ export class MailService {
         });
     }
 
+    async sendAdminRestoreRequest(userEmail: string, userName: string) {
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@helpfinder.com'; // Fallback
+        const safeName = this.escapeHtml(userName);
+        const subject = 'Account Restoration Request';
+        const html = `
+            <h1>Account Restoration Request</h1>
+            <p>User <strong>${safeName}</strong> (${userEmail}) tried to register but has a deleted account.</p>
+            <p>They have requested to restore their account.</p>
+            <p>Please log in to the admin panel to review and restore this user.</p>
+        `;
+
+        await this.sendMail({
+            to: adminEmail,
+            subject,
+            html
+        });
+    }
+
     private escapeHtml(text: string): string {
         return text
             .replace(/&/g, "&amp;")

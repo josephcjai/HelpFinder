@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 import { UsersService } from '../users/users.service'
@@ -37,6 +37,15 @@ export class AuthService {
         if (existing) {
             throw new UnauthorizedException('User already exists')
         }
+
+        // Check for soft-deleted user
+        const deletedUser = await this.usersService.findByEmailIncludingDeleted(email)
+        if (deletedUser && deletedUser.deletedAt) {
+            await this.usersService.requestRestoration(deletedUser.id)
+            await this.mailService.sendAdminRestoreRequest(email, name)
+            throw new ForbiddenException('Waiting for approval from admin')
+        }
+
         const hash = await bcrypt.hash(pass, 10)
         const user = await this.usersService.create(email, hash, name)
 

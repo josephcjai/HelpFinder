@@ -20,6 +20,7 @@ export interface UserProfile {
     helperRatingCount?: number
     requesterRating?: number
     requesterRatingCount?: number
+    deletedAt?: Date
 }
 
 export const USER_AVATARS = [

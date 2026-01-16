@@ -1,4 +1,4 @@
-import { Controller, Get, Delete, Param, UseGuards, Patch, Body, Request, ForbiddenException } from '@nestjs/common'
+import { Controller, Get, Delete, Param, UseGuards, Patch, Body, Request, ForbiddenException, Post } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { UsersService } from './users.service'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
@@ -22,6 +22,13 @@ export class UsersController {
   @Roles('admin')
   async delete(@Param('id') id: string, @Request() req: any) {
     return this.usersService.delete(id)
+  }
+
+  @Post(':id/restore')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async restore(@Param('id') id: string) {
+    return this.usersService.restore(id)
   }
 
   @Patch(':id/role')

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import { getUsers, deleteUser, updateUserRole, getUserProfile, removeToken, blockUser, unblockUser } from '../utils/api'
+import { getUsers, deleteUser, updateUserRole, getUserProfile, removeToken, blockUser, unblockUser, restoreUser } from '../utils/api'
 import { UserProfile } from '@helpfinder/shared'
 import { UserAvatar } from '../components/UserAvatar'
 import { Navbar } from '../components/Navbar'
@@ -15,6 +15,8 @@ type User = {
     role: 'user' | 'admin'
     isSuperAdmin?: boolean
     isBlocked?: boolean
+    deletedAt?: string
+    restorationRequestedAt?: string
 }
 
 export default function AdminDashboard() {
@@ -77,6 +79,20 @@ export default function AdminDashboard() {
             isDangerous: true,
             action: async () => {
                 await deleteUser(user.id)
+                loadUsers()
+            }
+        })
+    }
+
+    const handleRestore = (user: User) => {
+        setConfirmation({
+            isOpen: true,
+            title: 'Restore User',
+            message: `Are you sure you want to restore ${user.name}? This will grant them login access again.`,
+            confirmText: 'Restore',
+            isDangerous: false,
+            action: async () => {
+                await restoreUser(user.id)
                 loadUsers()
             }
         })
@@ -198,6 +214,10 @@ export default function AdminDashboard() {
                                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                                                         Super Admin
                                                     </span>
+                                                ) : u.deletedAt ? (
+                                                    <span className="text-gray-400 dark:text-gray-600 text-xs italic">
+                                                        —
+                                                    </span>
                                                 ) : (
                                                     <select
                                                         value={u.role}
@@ -208,6 +228,11 @@ export default function AdminDashboard() {
                                                         <option value="admin">Admin</option>
                                                     </select>
                                                 )}
+                                                {u.deletedAt && (
+                                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+                                                        DELETED
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(getUserStatus(u))}`}>
@@ -217,6 +242,21 @@ export default function AdminDashboard() {
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 {u.isSuperAdmin ? (
                                                     <span className="text-gray-400 dark:text-gray-600 text-xs italic">Protected</span>
+                                                ) : u.deletedAt ? (
+                                                    <div className="flex justify-end gap-2">
+                                                        {u.restorationRequestedAt ? (
+                                                            <button
+                                                                onClick={() => handleRestore(u)}
+                                                                className="text-green-600 hover:text-green-700 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
+                                                                title="Restore User"
+                                                            >
+                                                                <span className="material-icons-round text-sm">restore_from_trash</span>
+                                                                <span className="hidden sm:inline">Restore</span>
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-gray-400 dark:text-gray-600 text-xs italic">Deleted</span>
+                                                        )}
+                                                    </div>
                                                 ) : (
                                                     <div className="flex justify-end gap-2">
                                                         <button
@@ -284,6 +324,6 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             </footer>
-        </div>
+        </div >
     )
 }

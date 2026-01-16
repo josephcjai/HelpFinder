@@ -30,7 +30,25 @@ export class UsersService {
     }
 
     async findAll(): Promise<UserEntity[]> {
-        return this.repo.find()
+        return this.repo.find({ withDeleted: true })
+    }
+
+    async restore(id: string): Promise<UserEntity> {
+        await this.repo.restore(id)
+        // Clear the request flag upon restoration
+        await this.repo.update(id, { restorationRequestedAt: undefined })
+        return this.repo.findOneByOrFail({ id })
+    }
+
+    async requestRestoration(id: string): Promise<void> {
+        await this.repo.update(id, { restorationRequestedAt: new Date() })
+    }
+
+    async findByEmailIncludingDeleted(email: string): Promise<UserEntity | null> {
+        return this.repo.findOne({
+            where: { email },
+            withDeleted: true
+        })
     }
 
     async delete(id: string): Promise<void> {
@@ -38,7 +56,7 @@ export class UsersService {
         if (user?.isSuperAdmin) {
             throw new ForbiddenException('Cannot delete Super Admin')
         }
-        await this.repo.delete(id)
+        await this.repo.softDelete(id)
     }
 
     async updateRole(id: string, role: UserRole): Promise<UserEntity> {

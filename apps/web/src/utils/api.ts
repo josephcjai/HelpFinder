@@ -308,6 +308,12 @@ export const unblockUser = async (id: string) => {
     })
 }
 
+export const restoreUser = async (id: string) => {
+    return authenticatedFetch(`/users/${id}/restore`, {
+        method: 'POST'
+    })
+}
+
 export const createReview = async (
     taskId: string,
     targetUserId: string,

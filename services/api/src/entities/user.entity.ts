@@ -5,6 +5,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm'
 
 import { UserRole } from '@helpfinder/shared'
@@ -100,5 +101,11 @@ export class UserEntity {
 
   @UpdateDateColumn()
   updatedAt!: Date
+
+  @DeleteDateColumn()
+  deletedAt?: Date
+
+  @Column({ type: 'timestamp', nullable: true })
+  restorationRequestedAt?: Date
 }
 
