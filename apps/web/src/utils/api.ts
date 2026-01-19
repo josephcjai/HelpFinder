@@ -97,12 +97,13 @@ export const resendVerification = async (email: string) => {
     throw new Error('Failed to resend verification')
 }
 
-export const getTasks = async (lat?: number, lng?: number, radius?: number, category?: string, status: string = 'open'): Promise<Task[]> => {
+export const getTasks = async (lat?: number, lng?: number, radius?: number, category?: string, status: string = 'open', search?: string): Promise<Task[]> => {
     const params = new URLSearchParams()
     if (lat !== undefined) params.append('lat', lat.toString())
     if (lng !== undefined) params.append('lng', lng.toString())
     if (radius !== undefined) params.append('radius', radius.toString())
     if (category) params.append('category', category)
+    if (search) params.append('search', search)
     if (status) params.append('status', status)
 
     const url = `/tasks?${params.toString()}`

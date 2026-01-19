@@ -33,7 +33,7 @@ export default function Home() {
   const [statusFilter, setStatusFilter] = useState<'open' | 'all'>('open')
 
   // Search State
-  const [searchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [isSearchActive, setIsSearchActive] = useState(false)
   const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [searchRadius, setSearchRadius] = useState(10)
@@ -111,7 +111,7 @@ export default function Home() {
     const currentFilter = filter || statusFilter
     try {
       setLoading(true)
-      const data = await getTasks(undefined, undefined, undefined, undefined, currentFilter) // Fetch filtered tasks
+      const data = await getTasks(undefined, undefined, undefined, undefined, currentFilter, searchQuery) // Fetch filtered tasks
       setTasks(data)
     } catch (e) {
       setTasks([])
@@ -179,11 +179,10 @@ export default function Home() {
 
 
   // --- Filtering Logic ---
-  // 1. Base Filter: User Tab, Search Text ONLY (Category is now a soft filter/grouper)
+  // 1. Base Filter: User Tab ONLY (Category is now a soft filter/grouper)
   const baseFilteredTasks = tasks.filter(t => {
     const matchUser = activeTab === 'all' || (user && t.requesterId === user.id)
-    const matchSearch = !searchQuery || t.title.toLowerCase().includes(searchQuery.toLowerCase()) || (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase()))
-    return matchUser && matchSearch
+    return matchUser
   })
 
   // 2. Split Logic: Primary (Nearby/Matching) vs Other
@@ -343,6 +342,35 @@ export default function Home() {
 
           {/* Filters */}
           <div className="flex flex-wrap gap-3 mb-8 items-center">
+            {/* Text Search */}
+            <div className="relative flex-grow max-w-md">
+              <input
+                type="text"
+                placeholder="Search tasks..."
+                className="w-full h-9 pl-10 pr-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') loadTasks()
+                }}
+              />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <span className="material-symbols-outlined text-[20px]">search</span>
+              </div>
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('')
+                    // Trigger reload with empty search
+                    getTasks(undefined, undefined, undefined, undefined, statusFilter, '').then(data => setTasks(data))
+                  }}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                >
+                  <span className="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              )}
+            </div>
+
             {/* Category Filter */}
             <div className="relative">
               <select

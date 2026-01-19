@@ -21,7 +21,7 @@ export class TasksService {
     private readonly mailService: MailService
   ) { }
 
-  async findAll(lat?: number, lng?: number, radiusInKm: number = 50, category?: string, status: string = 'open'): Promise<TaskEntity[]> {
+  async findAll(lat?: number, lng?: number, radiusInKm: number = 50, category?: string, status: string = 'open', search?: string): Promise<TaskEntity[]> {
     const query = this.repo.createQueryBuilder('task')
       .leftJoinAndSelect('task.bids', 'bids')
       .leftJoinAndSelect('bids.helper', 'helper')
@@ -53,6 +53,13 @@ export class TasksService {
 
     if (status && status !== 'all') {
       query.andWhere('task.status = :status', { status })
+    }
+
+    if (search) {
+      query.andWhere(new Brackets(qb => {
+        qb.where('task.title ILIKE :search', { search: `%${search}%` })
+          .orWhere('task.description ILIKE :search', { search: `%${search}%` })
+      }))
     }
 
     const results = await query.getMany()
