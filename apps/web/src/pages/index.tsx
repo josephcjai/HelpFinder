@@ -30,6 +30,7 @@ export default function Home() {
   // Tab State
   const [activeTab, setActiveTab] = useState<'all' | 'my'>('all')
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
+  const [statusFilter, setStatusFilter] = useState<'open' | 'all'>('open')
 
   // Search State
   const [searchQuery] = useState('')
@@ -47,7 +48,7 @@ export default function Home() {
       // 2. Parallel Fetch Prep
       const promises: Promise<any>[] = [
         getCategories().catch(e => { console.error('Cats fail', e); return [] }),
-        getTasks().catch(e => { console.error('Tasks fail', e); return [] })
+        getTasks(undefined, undefined, undefined, undefined, 'open').catch(e => { console.error('Tasks fail', e); return [] })
       ]
 
       let profilePromise: Promise<UserProfile | null> | undefined
@@ -60,8 +61,7 @@ export default function Home() {
       // 3. Execute concurrently
       try {
         const results = await Promise.all(promises)
-        // results[0] = cats, results[1] = tasks, results[2] = profile (maybe)
-
+        // results[0] = cats, results[1] = tasks
         setCategories(results[0])
         setTasks(results[1])
 
@@ -107,10 +107,11 @@ export default function Home() {
   }
 
   // Modified to fetch ALL tasks for client-side filtering
-  const loadTasks = async () => {
+  const loadTasks = async (filter?: string) => {
+    const currentFilter = filter || statusFilter
     try {
       setLoading(true)
-      const data = await getTasks() // Fetch all tasks
+      const data = await getTasks(undefined, undefined, undefined, undefined, currentFilter) // Fetch filtered tasks
       setTasks(data)
     } catch (e) {
       setTasks([])
@@ -144,6 +145,7 @@ export default function Home() {
   const handleLogout = () => {
     removeToken()
     setUser(null)
+    setActiveTab('all') // Reset tab to 'all' to prevent empty state
     router.push('/')
   }
 
@@ -279,7 +281,7 @@ export default function Home() {
         <div className="mt-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <h2 className="text-gray-900 dark:text-white text-3xl font-bold leading-tight tracking-tight">
-              {isSearchActive ? 'Nearby Tasks' : (selectedCategory ? 'Matching Tasks' : 'All Tasks')}
+              {isSearchActive ? 'Nearby Tasks' : (selectedCategory ? 'Matching Tasks' : (statusFilter === 'open' ? 'Active Tasks' : 'All Tasks'))}
             </h2>
 
             {/* View Toggles */}
@@ -313,6 +315,27 @@ export default function Home() {
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === 'map' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}
                 >
                   Map View
+                </button>
+              </div>
+
+              <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <button
+                  onClick={() => {
+                    setStatusFilter('open');
+                    loadTasks('open');
+                  }}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${statusFilter === 'open' ? 'bg-white shadow-sm text-gray-900 border-l-2 border-primary' : 'text-gray-500 hover:text-gray-900'}`}
+                >
+                  Active Tasks
+                </button>
+                <button
+                  onClick={() => {
+                    setStatusFilter('all');
+                    loadTasks('all');
+                  }}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${statusFilter === 'all' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}
+                >
+                  All History
                 </button>
               </div>
             </div>

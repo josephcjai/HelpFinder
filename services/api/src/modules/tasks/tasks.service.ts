@@ -21,7 +21,7 @@ export class TasksService {
     private readonly mailService: MailService
   ) { }
 
-  async findAll(lat?: number, lng?: number, radiusInKm: number = 50, category?: string): Promise<TaskEntity[]> {
+  async findAll(lat?: number, lng?: number, radiusInKm: number = 50, category?: string, status: string = 'open'): Promise<TaskEntity[]> {
     const query = this.repo.createQueryBuilder('task')
       .leftJoinAndSelect('task.bids', 'bids')
       .leftJoinAndSelect('bids.helper', 'helper')
@@ -49,6 +49,10 @@ export class TasksService {
         qb.where('category.id = :category', { category })
           .orWhere('task.categoryId IS NULL')
       }))
+    }
+
+    if (status && status !== 'all') {
+      query.andWhere('task.status = :status', { status })
     }
 
     const results = await query.getMany()

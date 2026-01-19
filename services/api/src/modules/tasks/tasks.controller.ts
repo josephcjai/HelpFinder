@@ -15,13 +15,15 @@ export class TasksController {
   @ApiQuery({ name: 'lng', required: false, type: Number })
   @ApiQuery({ name: 'radius', required: false, type: Number })
   @ApiQuery({ name: 'category', required: false, type: String })
+  @ApiQuery({ name: 'status', required: false, type: String })
   async getTasks(
     @Query('lat') lat?: number,
     @Query('lng') lng?: number,
     @Query('radius') radius?: number,
     @Query('category') category?: string,
+    @Query('status') status?: string,
   ): Promise<TaskEntity[]> {
-    return this.tasks.findAll(lat, lng, radius, category)
+    return this.tasks.findAll(lat, lng, radius, category, status)
   }
 
   @UseGuards(JwtAuthGuard)
