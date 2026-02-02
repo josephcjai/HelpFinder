@@ -22,6 +22,8 @@ type User = {
 export default function AdminDashboard() {
     const [users, setUsers] = useState<User[]>([])
     const [searchQuery, setSearchQuery] = useState('')
+    const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'blocked' | 'deleted'>('all')
+    const [filterRole, setFilterRole] = useState<'all' | 'user' | 'admin'>('all')
     const [loading, setLoading] = useState(true)
     const [checkingAuth, setCheckingAuth] = useState(true)
     const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
@@ -194,9 +196,27 @@ export default function AdminDashboard() {
                             />
                             <span className="material-icons-round absolute left-2 top-2 text-gray-400 text-lg">search</span>
                         </div>
-                        <button className="px-4 py-2 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm flex items-center gap-2">
-                            <span className="material-icons-round text-lg">filter_list</span> Filter
-                        </button>
+                        <div className="flex gap-2">
+                            <select
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value as any)}
+                                className="px-3 py-2 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            >
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="blocked">Blocked</option>
+                                <option value="deleted">Deleted</option>
+                            </select>
+                            <select
+                                value={filterRole}
+                                onChange={(e) => setFilterRole(e.target.value as any)}
+                                className="px-3 py-2 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            >
+                                <option value="all">All Roles</option>
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
                         <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-glow flex items-center gap-2">
                             <span className="material-icons-round text-lg">add</span> Add User
                         </button>
@@ -220,7 +240,17 @@ export default function AdminDashboard() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-transparent divide-y divide-gray-200 dark:divide-gray-700">
-                                    {users.map(u => (
+                                    {users.filter(u => {
+                                        // Status Filter
+                                        if (filterStatus === 'active' && (u.isBlocked || u.deletedAt)) return false
+                                        if (filterStatus === 'blocked' && !u.isBlocked) return false
+                                        if (filterStatus === 'deleted' && !u.deletedAt) return false
+
+                                        // Role Filter
+                                        if (filterRole !== 'all' && u.role !== filterRole) return false
+
+                                        return true
+                                    }).map(u => (
                                         <tr key={u.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
