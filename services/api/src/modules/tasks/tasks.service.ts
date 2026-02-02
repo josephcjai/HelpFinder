@@ -26,6 +26,9 @@ export class TasksService {
       .leftJoinAndSelect('task.bids', 'bids')
       .leftJoinAndSelect('bids.helper', 'helper')
       .leftJoinAndSelect('task.category', 'category') // Join category
+      .leftJoinAndSelect('task.requester', 'requester') // Join requester to check status
+      .andWhere('requester.isBlocked = :isBlocked', { isBlocked: false }) // Filter blocked users
+      .andWhere('requester.deletedAt IS NULL') // Filter deleted users
       .orderBy('task.createdAt', 'DESC')
 
     if (lat !== undefined && lng !== undefined && !isNaN(Number(lat)) && !isNaN(Number(lng))) {

@@ -260,8 +260,10 @@ export const reopenTask = async (taskId: string) => {
     throw new Error('Failed to reopen task')
 }
 
-export const getUsers = async () => {
-    const res = await authenticatedFetch('/users')
+export const getUsers = async (search?: string) => {
+    const params = new URLSearchParams()
+    if (search) params.append('search', search)
+    const res = await authenticatedFetch(`/users?${params.toString()}`)
     if (res.ok) {
         return res.json()
     }

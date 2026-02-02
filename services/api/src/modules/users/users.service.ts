@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Repository, ILike } from 'typeorm'
 import { UserEntity } from '../../entities/user.entity'
 import { UserRole } from '@helpfinder/shared'
 
@@ -29,8 +29,18 @@ export class UsersService {
         return this.repo.save(user)
     }
 
-    async findAll(): Promise<UserEntity[]> {
-        return this.repo.find({ withDeleted: true })
+    async findAll(search?: string): Promise<UserEntity[]> {
+        if (!search) {
+            return this.repo.find({ withDeleted: true })
+        }
+
+        return this.repo.find({
+            where: [
+                { name: ILike(`%${search}%`) },
+                { email: ILike(`%${search}%`) }
+            ],
+            withDeleted: true
+        })
     }
 
     async restore(id: string): Promise<UserEntity> {

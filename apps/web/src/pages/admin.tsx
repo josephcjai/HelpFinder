@@ -21,6 +21,7 @@ type User = {
 
 export default function AdminDashboard() {
     const [users, setUsers] = useState<User[]>([])
+    const [searchQuery, setSearchQuery] = useState('')
     const [loading, setLoading] = useState(true)
     const [checkingAuth, setCheckingAuth] = useState(true)
     const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
@@ -62,7 +63,7 @@ export default function AdminDashboard() {
     const loadUsers = async () => {
         setLoading(true)
         try {
-            const data = await getUsers()
+            const data = await getUsers(searchQuery)
             setUsers(data)
         } catch (error) {
             console.error('Failed to load users', error)
@@ -132,9 +133,24 @@ export default function AdminDashboard() {
         router.push('/login')
     }
 
-    // Mock status logic (could be real if backend provided)
-    const getUserStatus = (user: User) => 'Active'
-    const getStatusColor = (status: string) => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+    // Real status logic
+    const getUserStatus = (user: User) => {
+        if (user.deletedAt) return 'Deleted'
+        if (user.isBlocked) return 'Blocked'
+        return 'Active'
+    }
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'Deleted':
+                return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+            case 'Blocked':
+                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+            case 'Active':
+            default:
+                return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+        }
+    }
 
     if (checkingAuth) {
         return (
@@ -167,6 +183,17 @@ export default function AdminDashboard() {
                         <p className="mt-2 text-gray-600 dark:text-gray-400">Manage users, roles, and platform settings efficiently.</p>
                     </div>
                     <div className="flex gap-3">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search users..."
+                                className="pl-9 pr-4 py-2 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && loadUsers()}
+                            />
+                            <span className="material-icons-round absolute left-2 top-2 text-gray-400 text-lg">search</span>
+                        </div>
                         <button className="px-4 py-2 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm flex items-center gap-2">
                             <span className="material-icons-round text-lg">filter_list</span> Filter
                         </button>

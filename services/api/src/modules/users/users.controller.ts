@@ -1,5 +1,5 @@
-import { Controller, Get, Delete, Param, UseGuards, Patch, Body, Request, ForbiddenException, Post } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
+import { Controller, Get, Delete, Param, UseGuards, Patch, Body, Request, ForbiddenException, Post, Query } from '@nestjs/common'
+import { ApiTags, ApiQuery } from '@nestjs/swagger'
 import { UsersService } from './users.service'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { RolesGuard } from '../auth/roles.guard'
@@ -14,8 +14,9 @@ export class UsersController {
 
   @Get()
   @Roles('admin')
-  async findAll() {
-    return this.usersService.findAll()
+  @ApiQuery({ name: 'search', required: false, type: String })
+  async findAll(@Query('search') search?: string) {
+    return this.usersService.findAll(search)
   }
 
   @Delete(':id')
