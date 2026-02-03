@@ -1,14 +1,20 @@
 import { ForbiddenException, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, ILike } from 'typeorm'
+import { JwtService } from '@nestjs/jwt'
 import { UserEntity } from '../../entities/user.entity'
 import { UserRole } from '@helpfinder/shared'
+import { MailService } from '../mail/mail.service'
+import * as bcrypt from 'bcrypt'
+import * as crypto from 'crypto'
 
 @Injectable()
 export class UsersService {
     constructor(
         @InjectRepository(UserEntity)
-        private readonly repo: Repository<UserEntity>
+        private readonly repo: Repository<UserEntity>,
+        private readonly jwtService: JwtService,
+        private readonly mailService: MailService
     ) { }
 
     async findByEmail(email: string): Promise<UserEntity | null> {
@@ -27,6 +33,35 @@ export class UsersService {
     async create(email: string, passwordHash: string, name: string): Promise<UserEntity> {
         const user = this.repo.create({ email, passwordHash, name })
         return this.repo.save(user)
+    }
+
+    async invite(email: string, name: string, role: string): Promise<UserEntity> {
+        const existing = await this.findByEmail(email)
+        if (existing) {
+            throw new Error('User already exists')
+        }
+
+        // Generate random password (placeholder, since they will reset it)
+        const randomPassword = crypto.randomBytes(16).toString('hex')
+        const passwordHash = await bcrypt.hash(randomPassword, 10)
+
+        const user = this.repo.create({
+            email,
+            name,
+            passwordHash,
+            role: role as UserRole,
+            isVerified: true // Admin invites are auto-verified
+        })
+        const savedUser = await this.repo.save(user)
+
+        // Generate reset token
+        const payload = { email: user.email, sub: user.id, type: 'reset' }
+        const token = this.jwtService.sign(payload, { expiresIn: '24h' }) // Longer expiration for invites
+
+        // Send email
+        await this.mailService.sendInvitationEmail(email, name, token)
+
+        return savedUser
     }
 
     async findAll(search?: string): Promise<UserEntity[]> {

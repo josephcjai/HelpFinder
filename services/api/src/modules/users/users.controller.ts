@@ -19,6 +19,12 @@ export class UsersController {
     return this.usersService.findAll(search)
   }
 
+  @Post('invite')
+  @Roles('admin')
+  async invite(@Body() body: { email: string; name: string; role: string }) {
+    return this.usersService.invite(body.email, body.name, body.role)
+  }
+
   @Delete(':id')
   @Roles('admin')
   async delete(@Param('id') id: string, @Request() req: any) {

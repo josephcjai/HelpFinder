@@ -270,6 +270,19 @@ export const getUsers = async (search?: string) => {
     throw new Error('Failed to fetch users')
 }
 
+export const inviteUser = async (data: { name: string, email: string, role: string }) => {
+    const res = await authenticatedFetch(`/users/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.message || 'Failed to invite user')
+    }
+    return res.json()
+}
+
 export const getMyCreatedTasks = async (): Promise<Task[]> => {
     const res = await authenticatedFetch('/tasks/my-created')
     if (res.ok) return res.json()

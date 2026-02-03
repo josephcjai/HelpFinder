@@ -163,6 +163,27 @@ export class MailService {
         });
     }
 
+    async sendInvitationEmail(email: string, name: string, token: string) {
+        const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
+        const safeName = this.escapeHtml(name);
+        const subject = 'You have been invited to HelpFinder';
+        const html = `
+            <h1>Welcome ${safeName}!</h1>
+            <p>An administrator has created an account for you on HelpFinder.</p>
+            <p>Please click the link below to set your password and activate your account:</p>
+            <a href="${resetLink}" style="padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0;">Set Password & Login</a>
+            <p>If the button doesn't work, copy and paste this link:</p>
+            <p>${resetLink}</p>
+            <p>This link will expire in 1 hour.</p>
+        `;
+
+        await this.sendMail({
+            to: email,
+            subject,
+            html
+        });
+    }
+
     private escapeHtml(text: string): string {
         return text
             .replace(/&/g, "&amp;")

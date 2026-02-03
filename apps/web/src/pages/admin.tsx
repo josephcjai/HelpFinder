@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import { getUsers, deleteUser, updateUserRole, getUserProfile, removeToken, blockUser, unblockUser, restoreUser } from '../utils/api'
+import { getUsers, deleteUser, updateUserRole, getUserProfile, removeToken, blockUser, unblockUser, restoreUser, inviteUser } from '../utils/api'
 import { UserProfile } from '@helpfinder/shared'
 import { UserAvatar } from '../components/UserAvatar'
 import { Navbar } from '../components/Navbar'
 import { AdminCategoryManager } from '../components/AdminCategoryManager'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
+import { AddUserModal } from '../components/admin/AddUserModal'
+
+// ... existing types ...
 
 type User = {
     id: string
@@ -27,6 +30,7 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true)
     const [checkingAuth, setCheckingAuth] = useState(true)
     const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
     const [confirmation, setConfirmation] = useState<{
         isOpen: boolean
         title: string
@@ -103,6 +107,11 @@ export default function AdminDashboard() {
 
     const handleRoleChange = async (id: string, newRole: string) => {
         await updateUserRole(id, newRole)
+        loadUsers()
+    }
+
+    const handleInviteUser = async (data: { name: string, email: string, role: string }) => {
+        await inviteUser(data)
         loadUsers()
     }
 
@@ -217,11 +226,20 @@ export default function AdminDashboard() {
                                 <option value="admin">Admin</option>
                             </select>
                         </div>
-                        <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-glow flex items-center gap-2">
+                        <button
+                            onClick={() => setIsInviteModalOpen(true)}
+                            className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-glow flex items-center gap-2"
+                        >
                             <span className="material-icons-round text-lg">add</span> Add User
                         </button>
                     </div>
                 </div>
+
+                <AddUserModal
+                    isOpen={isInviteModalOpen}
+                    onClose={() => setIsInviteModalOpen(false)}
+                    onSubmit={handleInviteUser}
+                />
 
                 {/* Users Table */}
                 <div className="bg-white/80 dark:bg-surface-dark/80 backdrop-blur-xl border border-white/50 dark:border-white/5 rounded-2xl shadow-soft overflow-hidden mb-12">
