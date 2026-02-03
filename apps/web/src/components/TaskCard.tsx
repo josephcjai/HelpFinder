@@ -2,6 +2,7 @@ import { Task, UserProfile } from '@helpfinder/shared'
 import { BidList } from './BidList'
 import { UserAvatar } from './UserAvatar'
 import { getCategoryColorClasses } from '../utils/colors'
+import { formatCurrency } from '../utils/format' // Add this
 import { authenticatedFetch, placeBid, startTask } from '../utils/api'
 import { useToast } from './ui/Toast'
 import { useModal } from './ui/ModalProvider'
@@ -86,7 +87,8 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
                 <div className="flex items-baseline gap-2">
                     {typeof task.budgetMin === 'number' ? (
                         <>
-                            <p className="text-2xl font-bold text-primary">${task.budgetMin}</p>
+                            {/* @ts-ignore */}
+                            <p className="text-2xl font-bold text-primary">{formatCurrency(task.budgetMin, task.currency || 'USD')}</p>
                             <span className="text-sm text-gray-500 dark:text-gray-400">Budget</span>
                         </>
                     ) : (
@@ -131,7 +133,8 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
                                     onClick={(e) => { e.stopPropagation(); setShowAcceptConfirm(true) }}
                                     className="btn btn-sm btn-primary w-full"
                                 >
-                                    Accept Price: ${task.budgetMin}
+                                    {/* @ts-ignore */}
+                                    Accept Price: {formatCurrency(task.budgetMin, task.currency || 'USD')}
                                 </button>
                             )}
                         </div>
@@ -238,7 +241,8 @@ export const TaskCard = ({ task, user, onEdit, onDelete, onRefresh }: TaskCardPr
                 onCancel={() => setShowAcceptConfirm(false)}
                 onConfirm={handleAcceptPrice}
                 title="Accept Offer Price"
-                message={`Are you sure you want to bid $${task?.budgetMin} for this task?`}
+                // @ts-ignore
+                message={`Are you sure you want to bid ${formatCurrency(task?.budgetMin || 0, task.currency || 'USD')} for this task?`}
                 confirmText="Yes, Place Bid"
             />
         </>

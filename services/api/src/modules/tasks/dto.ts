@@ -54,5 +54,9 @@ export class CreateTaskDto {
   @IsOptional()
   @IsString()
   zipCode?: string
+
+  @IsOptional()
+  @IsString()
+  currency?: string
 }
 

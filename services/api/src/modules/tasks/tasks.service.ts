@@ -101,6 +101,7 @@ export class TasksService {
       address: dto.address,
       country: dto.country,
       zipCode: dto.zipCode,
+      currency: dto.currency,
     })
 
     // Update user stats
@@ -132,7 +133,7 @@ export class TasksService {
     // Check for critical updates if task has an accepted bid
     const acceptedBid = task.bids?.find(b => b.status === 'accepted')
     if (acceptedBid && acceptedBid.helper) {
-      const criticalFields = ['title', 'description', 'budgetMin', 'budgetMax']
+      const criticalFields = ['title', 'description', 'budgetMin', 'budgetMax', 'currency']
       const hasCriticalUpdate = criticalFields.some(field => updates[field as keyof TaskEntity] !== undefined)
 
       if (hasCriticalUpdate) {

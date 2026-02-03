@@ -19,11 +19,17 @@ export class BidsService {
     private readonly taskRepo: Repository<TaskEntity>,
     @InjectRepository(ContractEntity)
     private readonly contractRepo: Repository<ContractEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
     private readonly notifications: NotificationsService,
     private readonly mailService: MailService
   ) { }
 
-  async placeBid(taskId: string, helper: UserEntity, amount: number, message?: string): Promise<BidEntity> {
+  async placeBid(taskId: string, user: UserEntity | any, amount: number, message?: string): Promise<BidEntity> {
+    // FIX: Fetch full user entity to ensure it's not a plain object from JWT and has latest rate limits
+    const helper = await this.userRepo.findOne({ where: { id: user.id } })
+    if (!helper) throw new NotFoundException('User not found')
+
     const task = await this.taskRepo.findOne({ where: { id: taskId }, relations: ['requester'] })
     if (!task) throw new NotFoundException('Task not found')
 
@@ -54,7 +60,7 @@ export class BidsService {
 
     // Update rate limit stats
     incrementRateLimit(helper, 'bidsPlacedCount', 'lastBidPlacedAt');
-    await this.bidRepo.manager.save(helper);
+    await this.userRepo.save(helper);
 
     // Notify Requester via Email
     if (task.requester?.email) {

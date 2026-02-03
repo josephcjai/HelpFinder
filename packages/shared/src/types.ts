@@ -21,6 +21,7 @@ export interface UserProfile {
     requesterRating?: number
     requesterRatingCount?: number
     deletedAt?: Date
+    currency?: string
 }
 
 export const USER_AVATARS = [
@@ -70,6 +71,7 @@ export interface Task {
     address?: string
     country?: string
     zipCode?: string
+    currency?: string
     status: TaskStatus
     completedAt?: Date
     createdAt: Date

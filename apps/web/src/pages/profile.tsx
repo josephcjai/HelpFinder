@@ -46,6 +46,7 @@ export default function ProfilePage() {
     // Form State
     const [address, setAddress] = useState('')
     const [country, setCountry] = useState('')
+    const [currency, setCurrency] = useState('USD') // Add this
     const [zipCode, setZipCode] = useState('')
     const [lat, setLat] = useState<number | undefined | null>(undefined)
     const [lng, setLng] = useState<number | undefined | null>(undefined)
@@ -92,6 +93,7 @@ export default function ProfilePage() {
             // Hydrate form
             setAddress(profile.address || '')
             setCountry(profile.country || '')
+            setCurrency(profile.currency || 'USD') // Add this
             setZipCode(profile.zipCode || '')
             setLat(profile.latitude)
             setLng(profile.longitude)
@@ -145,7 +147,8 @@ export default function ProfilePage() {
                 longitude: lng,
                 avatarIcon: avatarMode === 'icon' ? avatarIcon : null,
                 avatarInitials: avatarMode === 'initials' ? customInitials : null,
-                avatarColor
+                avatarColor,
+                currency
             })
             setUser(updated)
             showToast('Profile updated successfully', 'success')
@@ -373,6 +376,18 @@ export default function ProfilePage() {
                                             value={country}
                                             onChange={e => setCountry(e.target.value)}
                                         />
+                                    </div>
+                                    <div>
+                                        <label className="label">Currency Preference</label>
+                                        <select
+                                            className="input"
+                                            value={currency}
+                                            onChange={(e) => setCurrency(e.target.value)}
+                                        >
+                                            {['USD', 'EUR', 'GBP', 'INR', 'AUD', 'CAD', 'JPY'].map(c => (
+                                                <option key={c} value={c}>{c}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div>
                                         <label className="label">Zip Code</label>

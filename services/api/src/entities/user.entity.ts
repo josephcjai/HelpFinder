@@ -96,6 +96,9 @@ export class UserEntity {
   @Column({ nullable: true })
   zipCode?: string
 
+  @Column({ nullable: true, default: 'USD' })
+  currency?: string
+
   @CreateDateColumn()
   createdAt!: Date
 

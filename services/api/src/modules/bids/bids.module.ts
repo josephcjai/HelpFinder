@@ -5,6 +5,7 @@ import { BidsController } from './bids.controller'
 import { BidEntity } from '../../entities/bid.entity'
 import { TaskEntity } from '../../entities/task.entity'
 import { ContractEntity } from '../../entities/contract.entity'
+import { UserEntity } from '../../entities/user.entity'
 import { NotificationEntity } from '../../entities/notification.entity' // Added this import
 
 import { NotificationsModule } from '../notifications/notifications.module'
@@ -12,7 +13,7 @@ import { MailModule } from '../mail/mail.module'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([BidEntity, TaskEntity, ContractEntity, NotificationEntity]),
+    TypeOrmModule.forFeature([BidEntity, TaskEntity, ContractEntity, NotificationEntity, UserEntity]),
     NotificationsModule,
     MailModule // Added MailModule here
   ],

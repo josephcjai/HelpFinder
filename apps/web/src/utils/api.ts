@@ -177,7 +177,7 @@ export const withdrawBid = async (bidId: string) => {
         method: 'DELETE'
     })
     if (res.ok) {
-        return res.json()
+        return // Expecting empty response or ignored content
     }
     throw new Error('Failed to withdraw bid')
 }

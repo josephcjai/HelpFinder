@@ -18,6 +18,7 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask, initialCate
     const [desc, setDesc] = useState('')
     const [categoryId, setCategoryId] = useState(editingTask?.categoryId || initialCategoryId || '')
     const [budget, setBudget] = useState('')
+    const [currency, setCurrency] = useState('USD') // Add this
     const [address, setAddress] = useState('')
     const [country, setCountry] = useState('')
     const [zipCode, setZipCode] = useState('')
@@ -35,6 +36,8 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask, initialCate
             setDesc(editingTask.description || '')
             setCategoryId(editingTask.categoryId || '')
             setBudget(editingTask.budgetMin?.toString() || '')
+            // @ts-ignore
+            setCurrency(editingTask.currency || 'USD') // Add this
             setAddress(editingTask.address || '')
             setCountry(editingTask.country || '')
             setZipCode(editingTask.zipCode || '')
@@ -66,6 +69,8 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask, initialCate
                 if (user) {
                     if (user.address) setAddress(user.address)
                     if (user.country) setCountry(user.country)
+                    // @ts-ignore
+                    if (user.currency) setCurrency(user.currency) // Add this
                     if (user.zipCode) setZipCode(user.zipCode)
 
                     if (user.latitude && user.longitude) {
@@ -112,6 +117,7 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask, initialCate
                     description: desc,
                     categoryId: categoryId || undefined,
                     budgetMin: budget ? Number(budget) : undefined,
+                    currency, // Add this
                     address,
                     country,
                     zipCode,
@@ -175,17 +181,28 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask, initialCate
                         </select>
                     </div>
 
-                    <div>
-                        <label className="label">Budget (Optional)</label>
-                        <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
+                    <div className="md:col-span-2 grid grid-cols-2 gap-6">
+                        <div>
+                            <label className="label">Budget (Optional)</label>
                             <input
                                 type="number"
-                                className="input input-with-icon"
+                                className="input"
                                 placeholder="e.g. 50"
                                 value={budget}
                                 onChange={e => setBudget(e.target.value)}
                             />
+                        </div>
+                        <div>
+                            <label className="label">Currency</label>
+                            <select
+                                className="input"
+                                value={currency}
+                                onChange={e => setCurrency(e.target.value)}
+                            >
+                                {['USD', 'EUR', 'GBP', 'INR', 'AUD', 'CAD', 'JPY'].map(c => (
+                                    <option key={c} value={c}>{c}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 

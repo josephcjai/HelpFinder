@@ -45,6 +45,9 @@ export class TaskEntity {
   @Column({ nullable: true })
   zipCode?: string
 
+  @Column({ nullable: true, default: 'USD' })
+  currency?: string
+
   @Column({ type: 'varchar', default: 'open' })
   status!: TaskStatus
 

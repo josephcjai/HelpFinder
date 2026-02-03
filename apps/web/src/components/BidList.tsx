@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Task, UserProfile, Bid } from '@helpfinder/shared'
 import { getBids, placeBid, updateBid, acceptBid, withdrawBid, rejectBid } from '../utils/api'
 import { authenticatedFetch } from '../utils/api'
+import { formatCurrency } from '../utils/format' // Add this
 import { UserAvatar } from './UserAvatar'
 import { useToast } from './ui/Toast'
 import { useModal } from './ui/ModalProvider'
@@ -81,7 +82,8 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
         if (!bid) return
 
         showConfirmation({
-            title: `Accept Bid of $${bid.amount}?`,
+            // @ts-ignore
+            title: `Accept Bid of ${formatCurrency(bid.amount, task.currency || 'USD')}?`,
             message: `This will assign the task to ${bid.helper?.name || bid.helperName || 'the helper'}.`,
             onConfirm: async () => {
                 try {
@@ -131,7 +133,8 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
                             <div key={bid.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex flex-wrap gap-4 justify-between items-center">
                                 <div className="flex-1 min-w-[200px]">
                                     <div className="flex items-baseline gap-2 mb-1">
-                                        <div className="font-bold text-lg text-primary">${bid.amount}</div>
+                                        {/* @ts-ignore */}
+                                        <div className="font-bold text-lg text-primary">{formatCurrency(bid.amount, task.currency || 'USD')}</div>
                                         <div className="flex items-center gap-3">
                                             <UserAvatar user={{ name: bid.helperName, ...bid.helper }} size="md" />
                                             <div>
@@ -220,7 +223,8 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
                         <div>
                             <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Your Bid</h4>
                             <div className="flex items-center gap-2">
-                                <span className="font-bold text-3xl text-slate-800">${myBid.amount}</span>
+                                {/* @ts-ignore */}
+                                <span className="font-bold text-3xl text-slate-800">{formatCurrency(myBid.amount, task.currency || 'USD')}</span>
                                 <span className={`badge badge - ${myBid.status === 'accepted' ? 'success' : 'secondary'} `}>
                                     {myBid.status.toUpperCase()}
                                 </span>
@@ -272,7 +276,8 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
                     <input
                         type="number"
                         className="input"
-                        placeholder="Bid Amount ($)"
+                        // @ts-ignore
+                        placeholder={`Bid Amount (${task.currency || 'USD'})`}
                         value={bidAmount}
                         onChange={e => setBidAmount(e.target.value)}
                         required

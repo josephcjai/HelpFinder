@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { UserProfile } from '@helpfinder/shared'
-import { getUserProfile, getToken } from '../utils/api'
+import { getUserProfile, getToken, updateUserProfile } from '../utils/api'
 
 export const useAuth = () => {
     const [user, setUser] = useState<UserProfile | null>(null)
@@ -12,7 +12,21 @@ export const useAuth = () => {
             if (token) {
                 try {
                     const profile = await getUserProfile()
-                    setUser(profile)
+                    if (profile) {
+                        setUser(profile)
+
+                        // Auto-detect currency if not set
+                        if (!profile.currency) {
+                            try {
+                                const detectedCurrency = Intl.NumberFormat().resolvedOptions().currency || 'USD'
+                                // We do this silently
+                                await updateUserProfile({ ...profile, currency: detectedCurrency })
+                                setUser(prev => prev ? { ...prev, currency: detectedCurrency } : null)
+                            } catch (err) {
+                                console.warn('Failed to detect/save default currency', err)
+                            }
+                        }
+                    }
                 } catch (e) {
                     console.error('Failed to load user profile', e)
                 }

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Task, UserProfile } from '@helpfinder/shared'
 import { authenticatedFetch, getUserProfile, getToken, getTask } from '../../utils/api'
 import { getCategoryColorClasses } from '../../utils/colors'
+import { formatCurrency } from '../../utils/format' // Add this
 import { Navbar } from '../../components/Navbar'
 import { BidList } from '../../components/BidList'
 import { useTaskOperations } from '../../hooks/useTaskOperations'
@@ -284,7 +285,8 @@ export default function TaskDetailsPage() {
                         <div className="card bg-slate-50 border-slate-200">
                             <h3 className="text-sm font-bold text-secondary uppercase tracking-wider mb-2">Budget</h3>
                             {typeof task.budgetMin === 'number' ? (
-                                <span className="font-bold text-3xl text-primary">${task.budgetMin}</span>
+                                // @ts-ignore
+                                <span className="font-bold text-3xl text-primary">{formatCurrency(task.budgetMin, task.currency || 'USD')}</span>
                             ) : (
                                 <span className="text-xl text-secondary italic">Negotiable</span>
                             )}
@@ -301,13 +303,15 @@ export default function TaskDetailsPage() {
                                 ) : (
                                     <>
                                         <p className="text-sm text-indigo-700 mb-3">
-                                            Agree to the requested price of <strong>${task.budgetMin}</strong>?
+                                            {/* @ts-ignore */}
+                                            Agree to the requested price of <strong>{formatCurrency(task.budgetMin, task.currency || 'USD')}</strong>?
                                         </p>
                                         <button
                                             onClick={() => setShowAcceptConfirm(true)}
                                             className="btn btn-primary w-full"
                                         >
-                                            Accept Price: ${task.budgetMin}
+                                            {/* @ts-ignore */}
+                                            Accept Price: {formatCurrency(task.budgetMin, task.currency || 'USD')}
                                         </button>
                                     </>
                                 )}
@@ -387,7 +391,8 @@ export default function TaskDetailsPage() {
                 onCancel={() => setShowAcceptConfirm(false)}
                 onConfirm={handleAcceptPrice}
                 title="Accept Offer Price"
-                message={`Are you sure you want to bid $${task?.budgetMin} for this task?`}
+                // @ts-ignore
+                message={`Are you sure you want to bid ${formatCurrency(task?.budgetMin || 0, task?.currency || 'USD')} for this task?`}
                 confirmText="Yes, Place Bid"
             />
 
