@@ -65,9 +65,9 @@ export default function Home() {
         setCategories(results[0])
         setTasks(results[1])
 
+        let userLocationFound = false
+
         if (profilePromise) {
-          // Wait for profile specifically if it wasn't the last valid promise?
-          // (It's already awaited in Promise.all)
           // @ts-ignore
           const profile = await profilePromise
           setUser(profile)
@@ -75,6 +75,7 @@ export default function Home() {
           if (profile) {
             if (profile.latitude && profile.longitude) {
               setSearchLocation({ lat: profile.latitude, lng: profile.longitude })
+              userLocationFound = true
             } else if (profile.zipCode || profile.country) {
               const query = [profile.zipCode, profile.country].filter(Boolean).join(', ')
               if (query) {
@@ -83,10 +84,45 @@ export default function Home() {
                     setSearchLocation({ lat: res.lat, lng: res.lon })
                   }
                 })
+                // Assume geocoding will eventually set it, but we can also try browser/IP as backup immediately
               }
             }
           }
         }
+
+        // If no user profile location, try browser/IP geolocation
+        if (!userLocationFound) {
+          // Helper to get IP location
+          const getIpLocation = async () => {
+            try {
+              const res = await fetch('https://ipapi.co/json/')
+              const data = await res.json()
+              if (data.latitude && data.longitude) {
+                setSearchLocation({ lat: data.latitude, lng: data.longitude })
+              }
+            } catch (e) {
+              console.error('IP Geolocation failed', e)
+            }
+          }
+
+          if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                setSearchLocation({
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude
+                })
+              },
+              (error) => {
+                console.warn('Browser geolocation denied/failed, falling back to IP', error)
+                getIpLocation()
+              }
+            )
+          } else {
+            getIpLocation()
+          }
+        }
+
       } catch (err) {
         console.error('Init failure', err)
       } finally {
