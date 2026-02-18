@@ -21,7 +21,7 @@ import { ReviewsModule } from './reviews/reviews.module'
         type: 'postgres',
         url: config.get<string>('DATABASE_URL'),
         autoLoadEntities: true,
-        synchronize: true, // TODO: disable in production
+        synchronize: process.env.DB_SYNCHRONIZE === 'true', // Defaults to false (safe)
       }),
     }),
     UsersModule,

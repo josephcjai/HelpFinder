@@ -45,7 +45,7 @@ export class MailService {
     }
 
     async sendResetPasswordEmail(email: string, token: string) {
-        const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+        const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
         const subject = 'Reset Your Password - HelpFinder';
         const html = emailTemplates.resetPassword(resetLink);
         return this.sendMail({ to: email, subject, html });
