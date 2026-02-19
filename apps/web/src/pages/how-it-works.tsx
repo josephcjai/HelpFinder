@@ -24,7 +24,7 @@ export default function HowItWorks() {
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-background-dark font-sans text-gray-900 dark:text-gray-100">
             <Head>
-                <title>How it Works | HelpFinder</title>
+                <title>How it Works | HelpFinder4U</title>
             </Head>
 
             <Navbar user={user} onLogout={handleLogout} />
@@ -37,7 +37,7 @@ export default function HowItWorks() {
                             Get anything done, <span className="text-primary">fast.</span>
                         </h1>
                         <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-10">
-                            HelpFinder connects you with trusted local experts for any task.
+                            HelpFinder4U connects you with trusted local experts for any task.
                             From home repairs to tech support, we've got you covered.
                         </p>
                         <div className="flex justify-center gap-4">

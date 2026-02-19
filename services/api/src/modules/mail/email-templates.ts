@@ -21,15 +21,15 @@ export const emailTemplates = {
     newBid: (helperName: string, bidAmount: number, taskTitle: string, frontendUrl: string) => `
                 <h1>New Bid Received</h1>
                 <p><strong>${helperName}</strong> has placed a bid of <strong>$${bidAmount}</strong> on your task "<strong>${taskTitle}</strong>".</p>
-                <p>Login to HelpFinder to review and accept the bid.</p>
-                <a href="${frontendUrl}">Go to HelpFinder</a>
+                <p>Login to HelpFinder4U to review and accept the bid.</p>
+                <a href="${frontendUrl}">Go to HelpFinder4U</a>
             `,
 
     bidAccepted: (bidAmount: number, taskTitle: string, frontendUrl: string) => `
                 <h1>Congratulations!</h1>
                 <p>Your bid of <strong>$${bidAmount}</strong> for "<strong>${taskTitle}</strong>" has been accepted!</p>
                 <p>Please contact the requester to arrange the details.</p>
-                <a href="${frontendUrl}">Go to HelpFinder</a>
+                <a href="${frontendUrl}">Go to HelpFinder4U</a>
             `,
 
     taskStarted: (helperName: string, taskTitle: string, frontendUrl: string) => `

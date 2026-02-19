@@ -20,7 +20,7 @@ export default function TermsPage() {
         <LegalLayout title="Terms of Service">
             <section className="mb-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">1. Acceptance of Terms</h2>
-                <p>By accessing and using HelpFinder ("the Platform"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.</p>
+                <p>By accessing and using HelpFinder4U ("the Platform"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.</p>
             </section>
 
             <section className="mb-8">
@@ -35,13 +35,13 @@ export default function TermsPage() {
 
             <section className="mb-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">4. Liability Disclaimer (No Warranty)</h2>
-                <p className="mb-2">HelpFinder acts solely as a venue for Users to connect. We do not guarantee the quality, safety, accuracy, or legality of any tasks or services advertised. We are not a party to any agreement between Requesters and Helpers.</p>
-                <p className="font-semibold">HelpFinder is not responsible for the performance of any Helper, nor the payment capability of any Requester. We expressly disclaim any liability for any loss, damage, or injury arising from the use of our Platform.</p>
+                <p className="mb-2">HelpFinder4U acts solely as a venue for Users to connect. We do not guarantee the quality, safety, accuracy, or legality of any tasks or services advertised. We are not a party to any agreement between Requesters and Helpers.</p>
+                <p className="font-semibold">HelpFinder4U is not responsible for the performance of any Helper, nor the payment capability of any Requester. We expressly disclaim any liability for any loss, damage, or injury arising from the use of our Platform.</p>
             </section>
 
             <section className="mb-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">5. Payments & Disputes</h2>
-                <p>All payments are arranged, negotiated, and executed directly between Users. HelpFinder is not involved in handling funds, processing payments, or holding escrow.</p>
+                <p>All payments are arranged, negotiated, and executed directly between Users. HelpFinder4U is not involved in handling funds, processing payments, or holding escrow.</p>
                 <p className="mt-2">We are not responsible for:</p>
                 <ul className="list-disc pl-5 mt-1 space-y-1">
                     <li>Any refunds, non-payments, or chargebacks.</li>

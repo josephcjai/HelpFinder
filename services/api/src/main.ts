@@ -10,8 +10,8 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }))
 
   const config = new DocumentBuilder()
-    .setTitle('HelpFinder API')
-    .setDescription('Public API for HelpFinder')
+    .setTitle('HelpFinder4U API')
+    .setDescription('Public API for HelpFinder4U')
     .setVersion('0.1.0')
     .build()
   const document = SwaggerModule.createDocument(app, config)

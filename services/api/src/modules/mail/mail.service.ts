@@ -38,7 +38,7 @@ export class MailService {
     }
 
     async sendWelcomeEmail(email: string, name: string) {
-        const subject = 'Welcome to HelpFinder!';
+        const subject = 'Welcome to HelpFinder4U!';
         const safeName = this.escapeHtml(name);
         const html = emailTemplates.welcome(safeName);
         return this.sendMail({ to: email, subject, html });
@@ -46,7 +46,7 @@ export class MailService {
 
     async sendResetPasswordEmail(email: string, token: string) {
         const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
-        const subject = 'Reset Your Password - HelpFinder';
+        const subject = 'Reset Your Password - HelpFinder4U';
         const html = emailTemplates.resetPassword(resetLink);
         return this.sendMail({ to: email, subject, html });
     }
@@ -56,7 +56,7 @@ export class MailService {
 
         await this.sendMail({
             to: email,
-            subject: 'Verify your HelpFinder Email',
+            subject: 'Verify your HelpFinder4U Email',
             html: emailTemplates.verifyEmail(url)
         });
     }
@@ -83,7 +83,7 @@ export class MailService {
                 <h1>Congratulations!</h1>
                 <p>Your bid of <strong>$${bidAmount}</strong> for "<strong>${safeTitle}</strong>" has been accepted!</p>
                 <p>Please contact the requester to arrange the details.</p>
-                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}">Go to HelpFinder</a>
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}">Go to HelpFinder4U</a>
             `
         });
     }
@@ -146,7 +146,7 @@ export class MailService {
     }
 
     async sendAdminRestoreRequest(userEmail: string, userName: string) {
-        const adminEmail = process.env.ADMIN_EMAIL || 'admin@helpfinder.com'; // Fallback
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@helpfinder4u.com'; // Fallback
         const safeName = this.escapeHtml(userName);
         const subject = 'Account Restoration Request';
         const html = `
@@ -166,10 +166,10 @@ export class MailService {
     async sendInvitationEmail(email: string, name: string, token: string) {
         const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
         const safeName = this.escapeHtml(name);
-        const subject = 'You have been invited to HelpFinder';
+        const subject = 'You have been invited to HelpFinder4U';
         const html = `
             <h1>Welcome ${safeName}!</h1>
-            <p>An administrator has created an account for you on HelpFinder.</p>
+            <p>An administrator has created an account for you on HelpFinder4U.</p>
             <p>Please click the link below to set your password and activate your account:</p>
             <a href="${resetLink}" style="padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0;">Set Password & Login</a>
             <p>If the button doesn't work, copy and paste this link:</p>

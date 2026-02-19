@@ -391,7 +391,7 @@ export default function AdminDashboard() {
 
             <footer className="mt-16 py-8 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-surface-dark">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-                    <p>© 2024 HelpFinder. All rights reserved.</p>
+                    <p>© 2024 HelpFinder4U. All rights reserved.</p>
                     <div className="flex gap-4">
                         <a className="hover:text-primary transition-colors" href="#">Privacy</a>
                         <a className="hover:text-primary transition-colors" href="#">Terms</a>
