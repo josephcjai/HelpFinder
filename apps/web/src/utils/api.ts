@@ -378,5 +378,30 @@ export const deleteCategory = async (id: string): Promise<void> => {
     const res = await authenticatedFetch(`/categories/${id}`, {
         method: 'DELETE'
     })
-    if (!res.ok) throw new Error('Failed to delete category')
+}
+
+// Chat & Messages
+export const getChats = async (): Promise<any[]> => {
+    const res = await authenticatedFetch(`/chats`)
+    if (res.ok) return res.json()
+    throw new Error('Failed to fetch chats')
+}
+
+export const getChatMessages = async (roomId: string): Promise<any[]> => {
+    const res = await authenticatedFetch(`/chats/${roomId}/messages`)
+    if (res.ok) return res.json()
+    throw new Error('Failed to fetch messages')
+}
+
+export const sendChatMessage = async (roomId: string, content: string): Promise<any> => {
+    const res = await authenticatedFetch(`/chats/${roomId}/messages`, {
+        method: 'POST',
+        body: JSON.stringify({ content })
+    })
+    if (res.ok) return res.json()
+    throw new Error('Failed to send message')
+}
+
+export const markChatAsRead = async (roomId: string): Promise<void> => {
+    await authenticatedFetch(`/chats/${roomId}/read`, { method: 'POST' })
 }

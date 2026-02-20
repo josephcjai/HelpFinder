@@ -12,7 +12,7 @@ import { CreateTaskForm } from '../../components/CreateTaskForm'
 import { placeBid } from '../../utils/api'
 import { useToast } from '../../components/ui/Toast'
 import { ConfirmModal } from '../../components/ui/ConfirmModal'
-
+import { ChatBox } from '../../components/ChatBox'
 import { UserAvatar } from '../../components/UserAvatar'
 import { ReviewModal } from '../../components/ReviewModal'
 import { ReviewsListModal } from '../../components/ReviewsListModal'
@@ -276,6 +276,17 @@ export default function TaskDetailsPage() {
                             <div className="card">
                                 <h2 className="heading-2 mb-4">Bids</h2>
                                 <BidList task={task} user={user} onBidAccepted={loadTask} onBidPlaced={loadTask} />
+                            </div>
+                        )}
+
+                        {/* In-App Chat Section */}
+                        {user && (task.status === 'accepted' || task.status === 'in_progress' || task.status === 'review_pending' || task.status === 'completed' || task.status === 'cancelled') && (
+                            <div className="mt-8">
+                                <ChatBox
+                                    taskId={task.id}
+                                    user={user}
+                                    isArchived={['completed', 'cancelled'].includes(task.status)}
+                                />
                             </div>
                         )}
                     </div>

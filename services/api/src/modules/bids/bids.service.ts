@@ -5,6 +5,7 @@ import { BidEntity } from '../../entities/bid.entity'
 import { TaskEntity } from '../../entities/task.entity'
 import { UserEntity } from '../../entities/user.entity'
 import { ContractEntity } from '../../entities/contract.entity'
+import { ChatRoomEntity } from '../../entities/chat-room.entity'
 
 import { NotificationsService } from '../notifications/notifications.service'
 import { MailService } from '../mail/mail.service'
@@ -146,7 +147,6 @@ export class BidsService {
     bid.task.status = 'accepted'
     await this.taskRepo.save(bid.task)
 
-    // 3. Create Contract
     const contract = this.contractRepo.create({
       taskId: bid.task.id,
       helperId: bid.helper.id,
@@ -154,6 +154,20 @@ export class BidsService {
       status: 'pending'
     })
     await this.contractRepo.save(contract)
+
+    // 4. Auto-create Chat Room
+    const existingRoom = await this.bidRepo.manager.findOne(ChatRoomEntity, {
+      where: { taskId: bid.task.id, helperId: bid.helper.id }
+    })
+    if (!existingRoom) {
+      const chatRoom = this.bidRepo.manager.create(ChatRoomEntity, {
+        taskId: bid.task.id,
+        requesterId: bid.task.requester.id,
+        helperId: bid.helper.id,
+        status: 'active'
+      })
+      await this.bidRepo.manager.save(ChatRoomEntity, chatRoom)
+    }
 
     // Notify Helper
     await this.notifications.create({

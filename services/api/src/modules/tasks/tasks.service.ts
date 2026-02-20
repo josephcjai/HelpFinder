@@ -5,6 +5,7 @@ import { TaskEntity } from '../../entities/task.entity'
 import { BidEntity } from '../../entities/bid.entity'
 import { UserEntity } from '../../entities/user.entity'
 import { ContractEntity } from '../../entities/contract.entity'
+import { ChatRoomEntity } from '../../entities/chat-room.entity'
 import { NotificationsService } from '../notifications/notifications.service'
 import { MailService } from '../mail/mail.service'
 import { CreateTaskDto } from './dto'
@@ -283,6 +284,12 @@ export class TasksService {
       if (helper?.email) {
         await this.mailService.sendCompletionApprovedEmail(helper.email, task.title)
       }
+
+      // Archive Chat Room
+      await this.repo.manager.update(ChatRoomEntity,
+        { taskId: task.id, helperId: contract.helperId },
+        { status: 'archived' }
+      )
     }
 
     return task
@@ -367,6 +374,12 @@ export class TasksService {
       if (helper?.email) {
         await this.mailService.sendTaskReopenedEmail(helper.email, task.title)
       }
+
+      // Re-activate Chat Room
+      await this.repo.manager.update(ChatRoomEntity,
+        { taskId: task.id, helperId: contract.helperId },
+        { status: 'active' }
+      )
     }
 
     return task

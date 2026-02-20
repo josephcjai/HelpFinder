@@ -1,0 +1,180 @@
+﻿{
+  "config": {
+    "configFile": "C:\\githubrepo\\myrepos\\HelpFinder\\apps\\e2e\\playwright.config.ts",
+    "rootDir": "C:/githubrepo/myrepos/HelpFinder/apps/e2e/tests",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/githubrepo/myrepos/HelpFinder/apps/e2e/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/githubrepo/myrepos/HelpFinder/apps/e2e/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/githubrepo/myrepos/HelpFinder/apps/e2e/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "C:/githubrepo/myrepos/HelpFinder/apps/e2e/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/githubrepo/myrepos/HelpFinder/apps/e2e/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "C:/githubrepo/myrepos/HelpFinder/apps/e2e/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.2",
+    "workers": 6,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "chat.spec.ts",
+      "file": "chat.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "In-App Messaging Flow",
+          "file": "chat.spec.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Requester creates task, Helper bids, Requester accepts, Chat is created",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30103,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\githubrepo\\myrepos\\HelpFinder\\apps\\e2e\\tests\\chat.spec.ts",
+                            "column": 29,
+                            "line": 33
+                          },
+                          "message": "Error: page.waitForURL: Test ended.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================\n\n  31 |         await requesterPage.getByPlaceholder('e.g. 50').fill('50');\n  32 |         await requesterPage.click('button[type=\"submit\"]');\n> 33 |         await requesterPage.waitForURL(/\\/tasks\\/.+/);\n     |                             ^\n  34 |\n  35 |         // Extract Task ID\n  36 |         const urlSegments = requesterPage.url().split('/');\n    at C:\\githubrepo\\myrepos\\HelpFinder\\apps\\e2e\\tests\\chat.spec.ts:33:29"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-20T07:45:54.028Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\githubrepo\\myrepos\\HelpFinder\\apps\\e2e\\test-results\\chat-In-App-Messaging-Flow-2f2b3-ter-accepts-Chat-is-created-chromium\\test-failed-2.png"
+                        },
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\githubrepo\\myrepos\\HelpFinder\\apps\\e2e\\test-results\\chat-In-App-Messaging-Flow-2f2b3-ter-accepts-Chat-is-created-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\githubrepo\\myrepos\\HelpFinder\\apps\\e2e\\test-results\\chat-In-App-Messaging-Flow-2f2b3-ter-accepts-Chat-is-created-chromium\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6dac514d5d837ca37b9e-9b81bcb1f7e234cd30d4",
+              "file": "chat.spec.ts",
+              "line": 13,
+              "column": 9
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-02-20T07:45:52.759Z",
+    "duration": 33509.402,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}
