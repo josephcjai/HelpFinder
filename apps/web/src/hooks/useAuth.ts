@@ -18,7 +18,16 @@ export const useAuth = () => {
                         // Auto-detect currency if not set
                         if (!profile.currency) {
                             try {
-                                const detectedCurrency = Intl.NumberFormat().resolvedOptions().currency || 'USD'
+                                let detectedCurrency = Intl.NumberFormat().resolvedOptions().currency || 'USD'
+                                try {
+                                    const res = await fetch('https://ipapi.co/json/')
+                                    if (res.ok) {
+                                        const data = await res.json()
+                                        if (data.currency) detectedCurrency = data.currency
+                                    }
+                                } catch (e) {
+                                    console.warn('IP currency detection failed, falling back to browser locale', e)
+                                }
                                 // We do this silently
                                 await updateUserProfile({ ...profile, currency: detectedCurrency })
                                 setUser(prev => prev ? { ...prev, currency: detectedCurrency } : null)

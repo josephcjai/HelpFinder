@@ -18,7 +18,7 @@ export class ReviewsService {
     ) { }
 
     async create(reviewerId: string, dto: CreateReviewDto): Promise<ReviewEntity> {
-        console.log('ReviewsService.create start', { reviewerId, dto })
+
         const task = await this.taskRepo.findOne({
             where: { id: dto.taskId },
             relations: ['bids', 'bids.helper']
@@ -102,8 +102,7 @@ export class ReviewsService {
             return
         }
 
-        console.log(`Updating rating for user ${userId}, role: ${role}, newRating: ${newRating}`)
-        console.log(`Current stats - Helper: ${user.helperRating}/${user.helperRatingCount}, Requester: ${user.requesterRating}/${user.requesterRatingCount}`)
+
 
         if (role === 'helper') {
             const currentRating = Number(user.helperRating) || 0
@@ -122,7 +121,7 @@ export class ReviewsService {
             user.requesterRating = totalScore / user.requesterRatingCount
         }
 
-        console.log(`New stats - Helper: ${user.helperRating}/${user.helperRatingCount}, Requester: ${user.requesterRating}/${user.requesterRatingCount}`)
+
         await this.userRepo.save(user)
     }
 

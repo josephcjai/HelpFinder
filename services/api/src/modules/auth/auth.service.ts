@@ -87,18 +87,13 @@ export class AuthService {
     }
 
     async resendVerification(email: string) {
-        console.log(`[AuthService] Attempting to resend verification for: ${email}`);
         const user = await this.usersService.findByEmail(email);
 
         if (!user) {
-            console.log(`[AuthService] User not found for email: ${email}`);
             return { message: 'If user exists, email sent' };
         }
 
-        console.log(`[AuthService] User found: ${user.id}, isVerified: ${user.isVerified}`);
-
         if (user.isVerified) {
-            console.log(`[AuthService] User already verified.`);
             return { message: 'Email already verified' };
         }
 
@@ -114,15 +109,11 @@ export class AuthService {
         );
 
         const token = this.jwtService.sign({ email, sub: user.id, type: 'verify' }, { expiresIn: '24h' });
-
-        console.log(`[AuthService] Generated token, sending email...`);
         await this.mailService.sendVerificationEmail(email, token);
 
         // Update user stats
         incrementRateLimit(user, 'verificationEmailsSentCount', 'lastVerificationEmailSentAt');
         await this.usersService.save(user);
-
-        console.log(`[AuthService] Email sent successfully. Count: ${user.verificationEmailsSentCount}`);
 
         return { message: 'Verification email sent' };
     }

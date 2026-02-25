@@ -10,7 +10,7 @@ export class ReviewsController {
     @UseGuards(JwtAuthGuard)
     @Post()
     create(@Request() req: any, @Body() dto: CreateReviewDto) {
-        console.log('ReviewsController.create called:', { userId: req.user.id, dto })
+
         return this.reviewsService.create(req.user.id, dto)
     }
 
