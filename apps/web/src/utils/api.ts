@@ -25,11 +25,15 @@ export const authenticatedFetch = async (endpoint: string, options: RequestInit 
     const token = getToken()
     const headers = {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
         ...options.headers,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
     }
 
     const response = await fetch(`${apiBase}${endpoint}`, {
+        cache: 'no-store',
         ...options,
         headers,
     })

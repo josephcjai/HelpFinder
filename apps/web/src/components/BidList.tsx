@@ -21,6 +21,7 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
     const [bidMessage, setBidMessage] = useState('')
     const [showBidForm, setShowBidForm] = useState(false)
     const [editingBidId, setEditingBidId] = useState<string | null>(null)
+    const [agreedToTerms, setAgreedToTerms] = useState(false)
 
     // Reviews Modal State
     const [reviewModalOpen, setReviewModalOpen] = useState(false)
@@ -54,6 +55,7 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
             }
             setBidAmount('')
             setBidMessage('')
+            setAgreedToTerms(false)
             setShowBidForm(false)
             setEditingBidId(null)
             loadBids()
@@ -75,6 +77,7 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
         setEditingBidId(null)
         setBidAmount('')
         setBidMessage('')
+        setAgreedToTerms(false)
     }
 
     const handleAcceptBid = (bidId: string) => {
@@ -84,7 +87,7 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
         showConfirmation({
             // @ts-ignore
             title: `Accept Bid of ${formatCurrency(bid.amount, task.currency || 'USD')}?`,
-            message: `This will assign the task to ${bid.helper?.name || bid.helperName || 'the helper'}.`,
+            message: `This will assign the task to ${bid.helper?.name || bid.helperName || 'the helper'}. IMPORTANT: All payments must be handled externally between you and the helper. HelpFinder is not liable for payment disputes or unfulfilled work.`,
             onConfirm: async () => {
                 try {
                     await acceptBid(bidId)
@@ -288,8 +291,18 @@ export const BidList = ({ task, user, onBidAccepted, onBidPlaced }: BidListProps
                         value={bidMessage}
                         onChange={e => setBidMessage(e.target.value)}
                     />
+                    <label className="flex items-start gap-2 my-3 cursor-pointer text-xs text-slate-700 bg-slate-50 p-2 rounded border border-slate-200">
+                        <input
+                            type="checkbox"
+                            className="mt-0.5 flex-shrink-0"
+                            checked={agreedToTerms}
+                            onChange={(e) => setAgreedToTerms(e.target.checked)}
+                            required
+                        />
+                        <span>I agree to the Terms of Service. HelpFinder is a matching service and carries no liability.</span>
+                    </label>
                     <div className="flex gap-2">
-                        <button type="submit" className="btn btn-sm btn-primary flex-1">
+                        <button type="submit" disabled={!agreedToTerms} className={`btn btn-sm btn-primary flex-1 ${!agreedToTerms ? 'opacity-50 cursor-not-allowed' : ''}`}>
                             {editingBidId ? 'Update Bid' : 'Submit Bid'}
                         </button>
                         <button type="button" onClick={handleCancelBid} className="btn btn-sm btn-secondary">Cancel</button>

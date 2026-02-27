@@ -13,6 +13,8 @@ interface ConfirmationProps {
     isDangerous?: boolean
     confirmText?: string
     cancelText?: string
+    requireAgreement?: boolean
+    agreementText?: string
 }
 
 const ModalContext = createContext<ModalContextType | undefined>(undefined)
@@ -51,6 +53,8 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
                 isDangerous={config.isDangerous}
                 confirmText={config.confirmText}
                 cancelText={config.cancelText}
+                requireAgreement={config.requireAgreement}
+                agreementText={config.agreementText}
             />
         </ModalContext.Provider>
     )

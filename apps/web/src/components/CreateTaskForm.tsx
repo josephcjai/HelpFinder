@@ -3,6 +3,7 @@ import { authenticatedFetch, getCategories } from '../utils/api'
 import { Task, Category } from '@helpfinder/shared'
 import { useToast } from './ui/Toast'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 
 interface CreateTaskFormProps {
     onTaskSaved: (task: Task, isEdit: boolean) => void
@@ -297,7 +298,11 @@ export const CreateTaskForm = ({ onTaskSaved, onCancel, editingTask, initialCate
                     )}
                 </div>
 
-                <div className="flex gap-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
+                    <strong>Disclaimer:</strong> By {editingTask ? 'updating' : 'posting'} this task, you agree to our <Link href="/terms" className="text-blue-600 hover:underline">Terms of Service</Link> and acknowledge that HelpFinder4U is not responsible for payments, performance defaults, or disputes between users.
+                </div>
+
+                <div className="flex gap-4 pt-2 border-t border-gray-100 dark:border-gray-700">
                     <button type="submit" className="btn btn-primary flex-1">
                         {editingTask ? 'Update Task' : 'Post Task'}
                     </button>

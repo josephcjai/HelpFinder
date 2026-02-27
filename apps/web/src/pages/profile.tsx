@@ -168,9 +168,57 @@ export default function ProfilePage() {
             <Navbar user={user} onLogout={() => { localStorage.removeItem('token'); router.push('/') }} />
             <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
                 <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div>
-                        <h1 className="font-display font-extrabold text-4xl md:text-5xl text-secondary dark:text-white mb-2 tracking-tight">My Dashboard</h1>
-                        <p className="text-slate-500 dark:text-slate-400 text-lg">Track your jobs, manage listings, and monitor your bids.</p>
+                    <div className="flex items-center gap-4">
+                        <div className="relative">
+                            {/* @ts-ignore */}
+                            <UserAvatar user={user} size="xl" className="shadow-md" />
+                            {user?.isVerified && (
+                                <span className="absolute bottom-1 right-1 bg-green-500 text-white rounded-full p-0.5 border-2 border-slate-50 dark:border-gray-900" title="Verified User">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </span>
+                            )}
+                        </div>
+                        <div>
+                            <h1 className="font-display font-extrabold text-3xl md:text-4xl text-secondary dark:text-white mb-2 tracking-tight flex items-center gap-3">
+                                {user?.name}
+                                {user?.isVerified ? (
+                                    <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded dark:bg-green-900 dark:text-green-300 transform -translate-y-1">Verified</span>
+                                ) : (
+                                    <button
+                                        onClick={handleResend}
+                                        disabled={loading}
+                                        className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 text-xs font-semibold px-2 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300 transition-colors transform -translate-y-1"
+                                        title="Click to resend verification email"
+                                    >
+                                        {loading ? 'Sending...' : 'Unverified (Resend)'}
+                                    </button>
+                                )}
+                            </h1>
+                            <div className="flex flex-wrap gap-4 mt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => openReviews('helper')}
+                                    className="flex items-center gap-1 text-sm bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/10 dark:hover:bg-yellow-900/20 px-2 py-1 rounded-lg border border-yellow-100 dark:border-yellow-900/30 transition-colors cursor-pointer"
+                                >
+                                    <span className="material-icons-round text-yellow-500 text-sm">star</span>
+                                    <span className="font-bold text-slate-700 dark:text-slate-200">{user?.helperRating?.toFixed(1) || '0.0'}</span>
+                                    <span className="text-slate-400 text-xs">({user?.helperRatingCount || 0} reviews)</span>
+                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide ml-1">Helper</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => openReviews('requester')}
+                                    className="flex items-center gap-1 text-sm bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/10 dark:hover:bg-blue-900/20 px-2 py-1 rounded-lg border border-blue-100 dark:border-blue-900/30 transition-colors cursor-pointer"
+                                >
+                                    <span className="material-icons-round text-blue-500 text-sm">star</span>
+                                    <span className="font-bold text-slate-700 dark:text-slate-200">{user?.requesterRating?.toFixed(1) || '0.0'}</span>
+                                    <span className="text-slate-400 text-xs">({user?.requesterRatingCount || 0} reviews)</span>
+                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide ml-1">Requester</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div className="bg-white dark:bg-card-dark p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 flex shadow-sm self-start md:self-end">
                         <button
@@ -288,65 +336,6 @@ export default function ProfilePage() {
                                                     />
                                                 ))}
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    <div className="relative">
-                                        {/* @ts-ignore */}
-                                        <UserAvatar
-                                            user={user}
-                                            size="lg"
-                                            className="shadow-md"
-                                        />
-                                        {/* Verification Badge on Avatar */}
-                                        {user?.isVerified && (
-                                            <span className="absolute bottom-0 right-0 bg-green-500 text-white rounded-full p-0.5 border-2 border-white dark:border-gray-800" title="Verified User">
-                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                                                </svg>
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                            {user?.name}
-                                            {user?.isVerified ? (
-                                                <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Verified</span>
-                                            ) : (
-                                                <button
-                                                    onClick={handleResend}
-                                                    disabled={loading}
-                                                    className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 text-xs font-semibold px-2 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300 transition-colors"
-                                                    title="Click to resend verification email"
-                                                >
-                                                    {loading ? 'Sending...' : 'Unverified (Resend)'}
-                                                </button>
-                                            )}
-                                        </h2>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{user?.role}</p>
-                                        <div className="flex flex-wrap gap-4 mt-1">
-                                            <button
-                                                type="button"
-                                                onClick={() => openReviews('helper')}
-                                                className="flex items-center gap-1 text-sm bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/10 dark:hover:bg-yellow-900/20 px-2 py-1 rounded-lg border border-yellow-100 dark:border-yellow-900/30 transition-colors cursor-pointer"
-                                            >
-                                                <span className="material-icons-round text-yellow-500 text-sm">star</span>
-                                                <span className="font-bold text-slate-700 dark:text-slate-200">{user?.helperRating?.toFixed(1) || '0.0'}</span>
-                                                <span className="text-slate-400 text-xs">({user?.helperRatingCount || 0} reviews)</span>
-                                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide ml-1">Helper</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => openReviews('requester')}
-                                                className="flex items-center gap-1 text-sm bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/10 dark:hover:bg-blue-900/20 px-2 py-1 rounded-lg border border-blue-100 dark:border-blue-900/30 transition-colors cursor-pointer"
-                                            >
-                                                <span className="material-icons-round text-blue-500 text-sm">star</span>
-                                                <span className="font-bold text-slate-700 dark:text-slate-200">{user?.requesterRating?.toFixed(1) || '0.0'}</span>
-                                                <span className="text-slate-400 text-xs">({user?.requesterRatingCount || 0} reviews)</span>
-                                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide ml-1">Requester</span>
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -606,7 +595,8 @@ export default function ProfilePage() {
                             </section>
                         </div>
                     </div>
-                )}
+                )
+                }
             </main >
             {user && (
                 <ReviewsListModal

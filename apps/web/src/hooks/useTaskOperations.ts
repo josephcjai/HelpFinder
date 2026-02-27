@@ -39,6 +39,8 @@ export const useTaskOperations = ({ onRefresh, onDelete }: UseTaskOperationsProp
             title: `Start "${task.title}"?`,
             message: 'This will mark the task as In Progress. The requester will no longer be able to edit the task details.',
             confirmText: 'Start Task',
+            requireAgreement: true,
+            agreementText: 'I agree to the Terms of Service and commit to fulfilling this task.',
             onConfirm: async () => {
                 try {
                     await startTask(task.id)

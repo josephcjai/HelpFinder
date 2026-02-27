@@ -405,6 +405,8 @@ export default function TaskDetailsPage() {
                 // @ts-ignore
                 message={`Are you sure you want to bid ${formatCurrency(task?.budgetMin || 0, task?.currency || 'USD')} for this task?`}
                 confirmText="Yes, Place Bid"
+                requireAgreement={true}
+                agreementText="I agree to the Terms of Service. HelpFinder is a matching service and carries no liability."
             />
 
             <ReviewModal

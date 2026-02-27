@@ -9,12 +9,18 @@ export default function Register() {
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [agreedToTerms, setAgreedToTerms] = useState(false)
     const [error, setError] = useState('')
     const { showToast } = useToast()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
+
+        if (!agreedToTerms) {
+            setError('You must agree to the Terms of Service and Privacy Policy to register.')
+            return
+        }
 
         try {
             const res = await fetch(`${apiBase}/auth/register`, {
@@ -78,7 +84,20 @@ export default function Register() {
                             required
                         />
                     </div>
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Register</button>
+                    <div className="flex items-start gap-2 mt-2">
+                        <input
+                            type="checkbox"
+                            id="terms"
+                            className="mt-1"
+                            checked={agreedToTerms}
+                            onChange={e => setAgreedToTerms(e.target.checked)}
+                            required
+                        />
+                        <label htmlFor="terms" className="text-sm text-secondary">
+                            I agree to the <Link href="/terms" className="text-blue-600 hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>.
+                        </label>
+                    </div>
+                    <button type="submit" className="btn btn-primary mt-2" style={{ width: '100%' }}>Register</button>
                 </form>
                 <p className="mt-4 text-center text-secondary" style={{ textAlign: 'center' }}>
                     Already have an account? <Link href="/login">Login</Link>
