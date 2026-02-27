@@ -352,6 +352,26 @@ export const createReview = async (
     })
 }
 
+export const updateReview = async (
+    reviewId: string,
+    rating?: number,
+    comment?: string
+): Promise<any> => {
+    return authenticatedFetch(`/reviews/${reviewId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rating, comment }),
+    })
+}
+
+export const getTaskReviews = async (taskId: string): Promise<any[]> => {
+    const res = await authenticatedFetch(`/reviews/task/${taskId}`)
+    if (res.ok) return res.json()
+    throw new Error('Failed to fetch task reviews')
+}
+
 
 // Categories
 export const getCategories = async (): Promise<Category[]> => {

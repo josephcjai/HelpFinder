@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface ReviewModalProps {
     isOpen: boolean
@@ -6,12 +6,21 @@ interface ReviewModalProps {
     onSubmit: (rating: number, comment: string) => Promise<void>
     title: string
     isSubmitting: boolean
+    initialRating?: number
+    initialComment?: string
 }
 
-export const ReviewModal = ({ isOpen, onClose, onSubmit, title, isSubmitting }: ReviewModalProps) => {
-    const [rating, setRating] = useState(0)
-    const [comment, setComment] = useState('')
+export const ReviewModal = ({ isOpen, onClose, onSubmit, title, isSubmitting, initialRating = 0, initialComment = '' }: ReviewModalProps) => {
+    const [rating, setRating] = useState(initialRating)
+    const [comment, setComment] = useState(initialComment)
     const [hoverRating, setHoverRating] = useState(0)
+
+    useEffect(() => {
+        if (isOpen) {
+            setRating(initialRating)
+            setComment(initialComment)
+        }
+    }, [isOpen, initialRating, initialComment])
 
     if (!isOpen) return null
 
@@ -47,8 +56,8 @@ export const ReviewModal = ({ isOpen, onClose, onSubmit, title, isSubmitting }: 
                                 onClick={() => setRating(star)}
                             >
                                 <span className={`material-icons-round text-4xl ${(hoverRating || rating) >= star
-                                        ? 'text-yellow-400'
-                                        : 'text-slate-200 dark:text-slate-700'
+                                    ? 'text-yellow-400'
+                                    : 'text-slate-200 dark:text-slate-700'
                                     }`}>
                                     star
                                 </span>

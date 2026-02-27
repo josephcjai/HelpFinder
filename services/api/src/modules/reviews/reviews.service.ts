@@ -4,7 +4,7 @@ import { Repository } from 'typeorm'
 import { ReviewEntity } from '../../entities/review.entity'
 import { TaskEntity } from '../../entities/task.entity'
 import { UserEntity } from '../../entities/user.entity'
-import { CreateReviewDto } from './dto'
+import { CreateReviewDto, UpdateReviewDto } from './dto'
 
 @Injectable()
 export class ReviewsService {
@@ -142,5 +142,56 @@ export class ReviewsService {
             where: { taskId },
             relations: ['reviewer']
         })
+    }
+
+    async update(reviewerId: string, reviewId: string, dto: UpdateReviewDto): Promise<ReviewEntity> {
+        const review = await this.repo.findOneBy({ id: reviewId })
+        if (!review) throw new NotFoundException('Review not found')
+
+        if (review.reviewerId !== reviewerId) {
+            throw new ForbiddenException('You can only edit your own reviews')
+        }
+
+        // Check 30 day limit
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+        if (review.createdAt < thirtyDaysAgo) {
+            throw new BadRequestException('Reviews can only be edited within 30 days of creation')
+        }
+
+        const oldRating = review.rating
+
+        if (dto.rating) review.rating = dto.rating
+        if (dto.comment !== undefined) review.comment = dto.comment
+
+        const updatedReview = await this.repo.save(review)
+
+        // Only update stats if rating changed
+        if (dto.rating && oldRating !== dto.rating) {
+            await this.recalculateUserRating(review.targetUserId, review.targetRole, oldRating, dto.rating)
+        }
+
+        return updatedReview
+    }
+
+    private async recalculateUserRating(userId: string, role: 'helper' | 'requester', oldRating: number, newRating: number) {
+        const user = await this.userRepo.findOneBy({ id: userId })
+        if (!user) return
+
+        if (role === 'helper') {
+            const currentRating = Number(user.helperRating) || 0
+            const currentCount = Number(user.helperRatingCount) || 1
+
+            const totalScore = (currentRating * currentCount) - oldRating + newRating
+            user.helperRating = totalScore / currentCount
+        } else {
+            const currentRating = Number(user.requesterRating) || 0
+            const currentCount = Number(user.requesterRatingCount) || 1
+
+            const totalScore = (currentRating * currentCount) - oldRating + newRating
+            user.requesterRating = totalScore / currentCount
+        }
+        await this.userRepo.save(user)
     }
 }

@@ -1,6 +1,6 @@
-import { Controller, Post, Body, UseGuards, Request, Get, Param, Query } from '@nestjs/common'
+import { Controller, Post, Body, UseGuards, Request, Get, Param, Query, Patch } from '@nestjs/common'
 import { ReviewsService } from './reviews.service'
-import { CreateReviewDto } from './dto'
+import { CreateReviewDto, UpdateReviewDto } from './dto'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 
 @Controller('reviews')
@@ -22,5 +22,11 @@ export class ReviewsController {
     @Get('task/:taskId')
     findByTask(@Param('taskId') taskId: string) {
         return this.reviewsService.findByTask(taskId)
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch(':id')
+    update(@Request() req: any, @Param('id') id: string, @Body() dto: UpdateReviewDto) {
+        return this.reviewsService.update(req.user.id, id, dto)
     }
 }

@@ -16,7 +16,7 @@ import { ChatBox } from '../../components/ChatBox'
 import { UserAvatar } from '../../components/UserAvatar'
 import { ReviewModal } from '../../components/ReviewModal'
 import { ReviewsListModal } from '../../components/ReviewsListModal'
-import { createReview } from '../../utils/api'
+import { createReview, getTaskReviews, updateReview } from '../../utils/api'
 
 const MapComponent = dynamic(() => import('../../components/MapComponent'), { ssr: false })
 
@@ -30,6 +30,8 @@ export default function TaskDetailsPage() {
     const [showAcceptConfirm, setShowAcceptConfirm] = useState(false)
     const [showReviewModal, setShowReviewModal] = useState(false)
     const [submittingReview, setSubmittingReview] = useState(false)
+    const [myReview, setMyReview] = useState<any>(null)
+    const [isEditingReview, setIsEditingReview] = useState(false)
     const { showToast } = useToast()
 
     // Reviews List Modal (viewing reviews)
@@ -42,28 +44,45 @@ export default function TaskDetailsPage() {
         setSubmittingReview(true)
 
         try {
-            // Determine role and target user
-            const acceptedBid = task.bids?.find(b => b.status === 'accepted')
-            let targetRole: 'helper' | 'requester' = 'helper'
-            let targetUserId: string = ''
-
-            if (user.id === task.requesterId) {
-                if (!acceptedBid) throw new Error('No accepted bid found')
-                targetRole = 'helper'
-                targetUserId = acceptedBid.helperId
+            if (isEditingReview && myReview) {
+                await updateReview(myReview.id, rating, comment)
+                showToast('Review updated successfully!', 'success')
             } else {
-                targetRole = 'requester'
-                targetUserId = task.requesterId
-            }
+                // Determine role and target user
+                const acceptedBid = task.bids?.find(b => b.status === 'accepted')
+                let targetRole: 'helper' | 'requester' = 'helper'
+                let targetUserId: string = ''
 
-            await createReview(task.id, targetUserId, targetRole, rating, comment)
-            showToast('Review submitted successfully!', 'success')
+                if (user.id === task.requesterId) {
+                    if (!acceptedBid) throw new Error('No accepted bid found')
+                    targetRole = 'helper'
+                    targetUserId = acceptedBid.helperId
+                } else {
+                    targetRole = 'requester'
+                    targetUserId = task.requesterId
+                }
+
+                await createReview(task.id, targetUserId, targetRole, rating, comment)
+                showToast('Review submitted successfully!', 'success')
+            }
             setShowReviewModal(false)
-            // TODO: Ideally we should mark as reviewed locally to hide button
-        } catch (e) {
-            showToast('Failed to submit review. You may have already reviewed this task.', 'error')
+            setIsEditingReview(false)
+            loadReviews()
+        } catch (e: any) {
+            showToast(e.message || 'Failed to submit review.', 'error')
         } finally {
             setSubmittingReview(false)
+        }
+    }
+
+    const loadReviews = async () => {
+        if (!id || !user) return
+        try {
+            const reviews = await getTaskReviews(id as string)
+            const mine = reviews.find((r: any) => r.reviewerId === user.id)
+            setMyReview(mine || null)
+        } catch (e) {
+            console.error('Failed to load reviews')
         }
     }
 
@@ -94,6 +113,12 @@ export default function TaskDetailsPage() {
         }
         init()
     }, [id])
+
+    useEffect(() => {
+        if (task && task.status === 'completed' && user) {
+            loadReviews()
+        }
+    }, [task?.status, user?.id])
 
     const {
         handleDelete,
@@ -375,13 +400,35 @@ export default function TaskDetailsPage() {
                                         (task.requesterId === user.id) ||
                                         (task.bids?.some(b => b.status === 'accepted' && b.helperId === user.id))
                                     ) && (
-                                            <button
-                                                onClick={() => setShowReviewModal(true)}
-                                                className="btn btn-primary w-full mt-2 bg-gradient-to-r from-yellow-500 to-amber-500 border-none text-white shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50"
-                                            >
-                                                <span className="material-icons-round text-sm mr-2">star</span>
-                                                Leave Review
-                                            </button>
+                                            myReview ? (
+                                                <div className="mt-4 p-4 border border-slate-200 rounded-lg bg-slate-50">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <h4 className="font-bold text-sm text-slate-700">Your Review</h4>
+                                                        {((new Date().getTime() - new Date(myReview.createdAt).getTime()) < 30 * 24 * 60 * 60 * 1000) && (
+                                                            <button
+                                                                onClick={() => { setIsEditingReview(true); setShowReviewModal(true) }}
+                                                                className="text-xs text-primary hover:underline font-medium"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex gap-1 mb-2 text-yellow-500">
+                                                        {[1, 2, 3, 4, 5].map(star => (
+                                                            <span key={star} className={`material-icons-round text-sm ${star <= myReview.rating ? '' : 'text-slate-200'}`}>star</span>
+                                                        ))}
+                                                    </div>
+                                                    {myReview.comment && <p className="text-sm text-slate-600 italic">"{myReview.comment}"</p>}
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => { setIsEditingReview(false); setShowReviewModal(true) }}
+                                                    className="btn btn-primary w-full mt-2 bg-gradient-to-r from-yellow-500 to-amber-500 border-none text-white shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50"
+                                                >
+                                                    <span className="material-icons-round text-sm mr-2">star</span>
+                                                    Leave Review
+                                                </button>
+                                            )
                                         )}
 
                                     {/* Fallback if no actions */}
@@ -413,8 +460,10 @@ export default function TaskDetailsPage() {
                 isOpen={showReviewModal}
                 onClose={() => setShowReviewModal(false)}
                 onSubmit={handleReviewSubmit}
-                title="Rate Your Experience"
+                title={isEditingReview ? "Edit Your Review" : "Rate Your Experience"}
                 isSubmitting={submittingReview}
+                initialRating={isEditingReview && myReview ? myReview.rating : 0}
+                initialComment={isEditingReview && myReview ? myReview.comment : ''}
             />
 
             {/* New Reviews List Modal (Read) */}
