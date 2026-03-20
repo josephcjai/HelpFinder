@@ -8,12 +8,14 @@ import {
     resendVerification,
     getMyCreatedTasks,
     getMyJobs,
-    getMyBids
+    getMyBids,
+    changePassword
 } from '../utils/api'
 import { UserProfile, Task, Bid } from '@helpfinder/shared'
 import { Navbar } from '../components/Navbar'
 import { useToast } from '../components/ui/Toast'
 import { ReviewsListModal } from '../components/ReviewsListModal'
+import { ConfirmModal } from '../components/ui/ConfirmModal'
 
 import { geocodeAddress } from '../utils/geocoding'
 
@@ -30,6 +32,15 @@ export default function ProfilePage() {
     const [user, setUser] = useState<UserProfile | null>(null)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+
+    // Change Password State
+    const [currentPassword, setCurrentPassword] = useState('')
+    const [newPassword, setNewPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [changingPassword, setChangingPassword] = useState(false)
+    const [isPasswordSectionOpen, setIsPasswordSectionOpen] = useState(false)
+    const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
+    const [passwordChanged, setPasswordChanged] = useState(false)
 
     // Reviews Modal State
     const [showReviewsModal, setShowReviewsModal] = useState(false)
@@ -157,6 +168,53 @@ export default function ProfilePage() {
             console.error(error)
         }
         setSaving(false)
+    }
+
+    const handleChangePassword = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (newPassword !== confirmPassword) {
+            showToast('New passwords do not match', 'error')
+            return
+        }
+        if (newPassword.length < 6) {
+            showToast('New password must be at least 6 characters', 'error')
+            return
+        }
+        setShowPasswordConfirm(true)
+    }
+
+    const doChangePassword = async () => {
+        setChangingPassword(true)
+        try {
+            await changePassword(currentPassword, newPassword)
+            setPasswordChanged(true)
+            setIsPasswordSectionOpen(false)
+            setCurrentPassword('')
+            setNewPassword('')
+            setConfirmPassword('')
+            setTimeout(() => setPasswordChanged(false), 4000)
+        } catch (err: any) {
+            showToast(err.message || 'Failed to change password', 'error')
+        } finally {
+            setChangingPassword(false)
+        }
+    }
+
+    const passwordStrength = (pwd: string): { score: number; label: string; color: string } => {
+        if (!pwd) return { score: 0, label: '', color: '' }
+        let score = 0
+        if (pwd.length >= 8) score++
+        if (/[A-Z]/.test(pwd)) score++
+        if (/[0-9]/.test(pwd)) score++
+        if (/[^A-Za-z0-9]/.test(pwd)) score++
+        const levels = [
+            { score: 0, label: '', color: '' },
+            { score: 1, label: 'Weak', color: 'bg-red-400' },
+            { score: 2, label: 'Fair', color: 'bg-orange-400' },
+            { score: 3, label: 'Good', color: 'bg-yellow-400' },
+            { score: 4, label: 'Strong', color: 'bg-green-500' },
+        ]
+        return levels[score]
     }
 
     if (loading) {
@@ -454,6 +512,129 @@ export default function ProfilePage() {
                                 </button>
                             </div>
                         </form>
+
+                        {/* Change Password Section - Modern Collapsible Card */}
+                        <div className="mt-8 pt-8 border-t border-slate-200">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
+                                        <span className="material-icons-round text-slate-500 text-xl">lock</span>
+                                    </div>
+                                    <div>
+                                        <h2 className="text-base font-bold text-slate-800">Password</h2>
+                                        <p className="text-xs text-slate-400">Update your account password</p>
+                                    </div>
+                                </div>
+                                {passwordChanged ? (
+                                    <span className="flex items-center gap-1.5 text-green-600 text-sm font-semibold bg-green-50 px-3 py-1.5 rounded-full">
+                                        <span className="material-icons-round text-sm">check_circle</span>
+                                        Password updated!
+                                    </span>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPasswordSectionOpen(v => !v)}
+                                        className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-blue-700 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50"
+                                    >
+                                        {isPasswordSectionOpen ? 'Cancel' : 'Change Password'}
+                                        <span className="material-icons-round text-sm">
+                                            {isPasswordSectionOpen ? 'expand_less' : 'edit'}
+                                        </span>
+                                    </button>
+                                )}
+                            </div>
+
+                            {isPasswordSectionOpen && (
+                                <form onSubmit={handleChangePassword} className="mt-4 space-y-4 bg-slate-50 rounded-2xl p-6 border border-slate-100 animate-fade-in">
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Current Password</label>
+                                        <input
+                                            type="password"
+                                            value={currentPassword}
+                                            onChange={e => setCurrentPassword(e.target.value)}
+                                            className="input w-full"
+                                            placeholder="Enter your current password"
+                                            required
+                                            autoComplete="current-password"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">New Password</label>
+                                        <input
+                                            type="password"
+                                            value={newPassword}
+                                            onChange={e => setNewPassword(e.target.value)}
+                                            className="input w-full"
+                                            placeholder="At least 6 characters"
+                                            required
+                                            autoComplete="new-password"
+                                        />
+                                        {newPassword && (
+                                            <div className="mt-2">
+                                                <div className="flex gap-1 mb-1">
+                                                    {[1, 2, 3, 4].map(i => (
+                                                        <div
+                                                            key={i}
+                                                            className={`h-1 flex-1 rounded-full transition-all ${
+                                                                passwordStrength(newPassword).score >= i
+                                                                    ? passwordStrength(newPassword).color
+                                                                    : 'bg-slate-200'
+                                                            }`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <p className={`text-xs font-medium ${
+                                                    passwordStrength(newPassword).color.replace('bg-', 'text-').replace('-400', '-500').replace('-500', '-600')
+                                                }`}>{passwordStrength(newPassword).label}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Confirm New Password</label>
+                                        <input
+                                            type="password"
+                                            value={confirmPassword}
+                                            onChange={e => setConfirmPassword(e.target.value)}
+                                            className={`input w-full transition-all ${
+                                                confirmPassword && confirmPassword !== newPassword
+                                                    ? 'border-red-300 focus:border-red-400 bg-red-50'
+                                                    : confirmPassword && confirmPassword === newPassword
+                                                        ? 'border-green-300 focus:border-green-400'
+                                                        : ''
+                                            }`}
+                                            placeholder="Repeat new password"
+                                            required
+                                            autoComplete="new-password"
+                                        />
+                                        {confirmPassword && confirmPassword !== newPassword && (
+                                            <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                                <span className="material-icons-round text-sm">error_outline</span>
+                                                Passwords do not match
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="flex justify-end pt-2">
+                                        <button
+                                            type="submit"
+                                            disabled={changingPassword || !currentPassword || !newPassword || newPassword !== confirmPassword}
+                                            className="flex items-center gap-2 px-6 py-2.5 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        >
+                                            <span className="material-icons-round text-sm">lock_reset</span>
+                                            {changingPassword ? 'Updating...' : 'Update Password'}
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+                        </div>
+
+                        <ConfirmModal
+                            isOpen={showPasswordConfirm}
+                            onCancel={() => setShowPasswordConfirm(false)}
+                            onConfirm={async () => { setShowPasswordConfirm(false); await doChangePassword() }}
+                            title="Confirm Password Change"
+                            message="Are you sure you want to change your password? You will use the new password on your next login."
+                            confirmText="Yes, Change Password"
+                        />
                     </div >
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">

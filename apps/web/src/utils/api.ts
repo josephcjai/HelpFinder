@@ -101,6 +101,17 @@ export const resendVerification = async (email: string) => {
     throw new Error('Failed to resend verification')
 }
 
+export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+    const res = await authenticatedFetch('/users/me/password', {
+        method: 'PATCH',
+        body: JSON.stringify({ currentPassword, newPassword }),
+    })
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.message || 'Failed to change password')
+    }
+}
+
 export const getTasks = async (lat?: number, lng?: number, radius?: number, category?: string, status: string = 'open', search?: string): Promise<Task[]> => {
     const params = new URLSearchParams()
     if (lat !== undefined) params.append('lat', lat.toString())

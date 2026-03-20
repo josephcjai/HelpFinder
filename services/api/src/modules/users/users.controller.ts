@@ -1,22 +1,49 @@
-import { Controller, Get, Delete, Param, UseGuards, Patch, Body, Request, ForbiddenException, Post, Query } from '@nestjs/common'
+import { Controller, Get, Delete, Param, UseGuards, Patch, Body, Request, ForbiddenException, Post, Query, BadRequestException } from '@nestjs/common'
 import { ApiTags, ApiQuery } from '@nestjs/swagger'
 import { UsersService } from './users.service'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { RolesGuard } from '../auth/roles.guard'
 import { Roles } from '../auth/roles.decorator'
 import { UserRole } from '@helpfinder/shared'
+import * as bcrypt from 'bcrypt'
+import { MailService } from '../mail/mail.service'
 
 @ApiTags('users')
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly mailService: MailService,
+  ) { }
 
   @Get()
   @Roles('admin')
   @ApiQuery({ name: 'search', required: false, type: String })
   async findAll(@Query('search') search?: string) {
     return this.usersService.findAll(search)
+  }
+
+  @Patch('me/password')
+  async changePassword(
+    @Request() req: any,
+    @Body() body: { currentPassword: string; newPassword: string }
+  ) {
+    const user = await this.usersService.findById(req.user.id)
+    if (!user) throw new BadRequestException('User not found')
+
+    const isMatch = await bcrypt.compare(body.currentPassword, user.passwordHash)
+    if (!isMatch) throw new BadRequestException('Current password is incorrect')
+
+    if (!body.newPassword || body.newPassword.length < 6) {
+      throw new BadRequestException('New password must be at least 6 characters')
+    }
+
+    const hash = await bcrypt.hash(body.newPassword, 10)
+    await this.usersService.updatePassword(req.user.id, hash)
+    // Fire-and-forget security notification email
+    this.mailService.sendPasswordChangedEmail(user.email, user.name).catch(() => {})
+    return { message: 'Password updated successfully' }
   }
 
   @Post('invite')

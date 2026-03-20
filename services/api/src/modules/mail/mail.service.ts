@@ -184,6 +184,27 @@ export class MailService {
         });
     }
 
+    async sendPasswordChangedEmail(email: string, name: string) {
+        const safeName = this.escapeHtml(name);
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        await this.sendMail({
+            to: email,
+            subject: 'Your HelpFinder4U Password Was Changed',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+                    <h2 style="color: #1d4ed8;">Password Changed Successfully</h2>
+                    <p>Hi <strong>${safeName}</strong>,</p>
+                    <p>Your HelpFinder4U account password was just changed successfully.</p>
+                    <div style="background: #fef9c3; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 20px 0; border-radius: 4px;">
+                        <strong>⚠️ Wasn't you?</strong> If you did not make this change, please reset your password immediately and contact support.
+                    </div>
+                    <a href="${frontendUrl}/forgot-password" style="display: inline-block; padding: 10px 20px; background-color: #dc2626; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Reset My Password</a>
+                    <p style="margin-top: 24px; font-size: 13px; color: #6b7280;">This is an automated security notification from HelpFinder4U.</p>
+                </div>
+            `
+        });
+    }
+
     private escapeHtml(text: string): string {
         return text
             .replace(/&/g, "&amp;")
