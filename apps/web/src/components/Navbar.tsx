@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { useState } from 'react'
 import { UserAvatar } from './UserAvatar'
 import { UserProfile } from '@helpfinder/shared'
 import { NotificationBell } from './NotificationBell'
@@ -10,6 +11,8 @@ interface NavbarProps {
 }
 
 export const Navbar = ({ user, onLogout, isLoading }: NavbarProps) => {
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
     return (
         <div className="w-full border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,15 +79,80 @@ export const Navbar = ({ user, onLogout, isLoading }: NavbarProps) => {
                         )}
                     </div>
 
-                    {/* Mobile Menu Button - Placeholder */}
-                    <div className="md:hidden">
-                        <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                    {/* Mobile Menu Button */}
+                    <div className="md:hidden flex items-center">
+                        <button 
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                                {mobileMenuOpen ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                                )}
                             </svg>
                         </button>
                     </div>
                 </header>
+
+                {/* Mobile Menu Dropdown */}
+                {mobileMenuOpen && (
+                    <div className="md:hidden border-t border-gray-100 dark:border-gray-800 py-4 pb-6 animate-fade-in">
+                        <div className="flex flex-col gap-4">
+                            {isLoading ? (
+                                <div className="animate-pulse flex flex-col gap-4 p-4">
+                                    <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                </div>
+                            ) : !user ? (
+                                <>
+                                    <Link className="px-4 py-2 text-base font-medium text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-primary rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50" href="/how-it-works" onClick={() => setMobileMenuOpen(false)}>How it works</Link>
+                                    <Link className="px-4 py-2 text-base font-medium text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-primary rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50" href="/#tasks" onClick={() => setMobileMenuOpen(false)}>Browse tasks</Link>
+                                    <div className="border-t border-gray-100 dark:border-gray-800 my-2"></div>
+                                    <Link href="/login" className="mx-4 flex items-center justify-center rounded-lg h-10 bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white font-bold tracking-wide" onClick={() => setMobileMenuOpen(false)}>
+                                        Log In
+                                    </Link>
+                                    <Link href="/register" className="mx-4 flex items-center justify-center rounded-lg h-10 bg-primary text-white font-bold tracking-wide shadow-md shadow-primary/20" onClick={() => setMobileMenuOpen(false)}>
+                                        Sign Up
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="flex items-center gap-3 px-4 py-2 mb-2">
+                                        <UserAvatar user={user} size="sm" />
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{user.name}</p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user.role}</p>
+                                        </div>
+                                    </div>
+                                    <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-base font-medium text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg mx-2" onClick={() => setMobileMenuOpen(false)}>
+                                        <span className="material-icons-round text-xl text-gray-400">person</span>
+                                        My Profile
+                                    </Link>
+                                    <Link href="/how-it-works" className="flex items-center gap-3 px-4 py-2.5 text-base font-medium text-gray-800 hover:text-primary dark:text-gray-200 dark:hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg mx-2" onClick={() => setMobileMenuOpen(false)}>
+                                        <span className="material-icons-round text-xl text-gray-400">help_outline</span>
+                                        How it works
+                                    </Link>
+                                    {user.role === 'admin' && (
+                                        <Link href="/admin" className="flex items-center gap-3 px-4 py-2.5 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg mx-2" onClick={() => setMobileMenuOpen(false)}>
+                                            <span className="material-icons-round text-xl">admin_panel_settings</span>
+                                            Admin Dashboard
+                                        </Link>
+                                    )}
+                                    <div className="border-t border-gray-100 dark:border-gray-800 my-2 mx-4"></div>
+                                    <button
+                                        onClick={() => { setMobileMenuOpen(false); onLogout(); }}
+                                        className="mx-4 flex items-center gap-3 px-4 py-2.5 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                                    >
+                                        <span className="material-icons-round text-xl text-gray-400">logout</span>
+                                        Logout
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )
