@@ -5,6 +5,10 @@ node_modules/
 dist/
 .next/
 coverage/
+apps/web/out/
+apps/web/android/local.properties
+apps/web/android/app/release.jks
+apps/web/android/app/build/
 
 # Env
 .env

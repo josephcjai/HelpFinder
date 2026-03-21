@@ -5,6 +5,12 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    /* Native App Hardening */
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+
   body {
     @apply font-sans bg-background-light dark:bg-background-dark text-gray-900 dark:text-white antialiased;
   }

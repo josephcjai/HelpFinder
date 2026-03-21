@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HelpFinder</string>
+    <string name="title_activity_main">HelpFinder</string>
+    <string name="package_name">com.helpfinder.app</string>
+    <string name="custom_url_scheme">com.helpfinder.app</string>
+</resources>

@@ -5,14 +5,21 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
+    "build:mobile": "cross-env CAPACITOR_BUILD=true next build",
     "start": "next start -p 3000",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "jest"
   },
   "dependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/cli": "^8.2.0",
+    "@capacitor/core": "^8.2.0",
+    "@capacitor/keyboard": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.1",
     "@helpfinder/shared": "*",
     "@types/leaflet": "^1.9.8",
+    "cross-env": "^10.1.0",
     "date-fns": "^4.1.0",
     "leaflet": "^1.9.4",
     "next": "14.2.5",
