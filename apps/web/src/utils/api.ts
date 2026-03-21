@@ -1,6 +1,30 @@
 import { Task, Bid, Category, UserProfile } from '@helpfinder/shared'
 
-export const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'
+const getApiBase = () => {
+  if (typeof window === 'undefined') {
+    return process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'
+  }
+  
+  const { hostname } = window.location
+  
+  // If the browser is at localhost, stay on localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'
+  }
+
+  // If we are accessing via an IP address (like 192.168.1.3 in live-reload),
+  // we should use that SAME IP for the API calls. This works for both 
+  // emulator and real devices on the local network!
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+    return `http://${hostname}:4000`
+  }
+
+  // Fallback to the environment variable or localhost
+  return process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'
+}
+
+export const apiBase = getApiBase()
+console.log('[API] Using base URL:', apiBase)
 
 export const getToken = () => {
     if (typeof window !== 'undefined') {

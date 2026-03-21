@@ -6,7 +6,8 @@ import { AppModule } from './modules/app.module'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
-  app.enableCors({ origin: process.env.CORS_ORIGIN || true, credentials: true })
+  const origins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : true
+  app.enableCors({ origin: origins, credentials: true })
   app.enableShutdownHooks()
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }))
 
@@ -19,7 +20,7 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document)
 
   const port = process.env.PORT ? Number(process.env.PORT) : 4000
-  await app.listen(port)
+  await app.listen(port, '0.0.0.0')
   // eslint-disable-next-line no-console
   console.log(`API listening on http://localhost:${port}`)
 }
