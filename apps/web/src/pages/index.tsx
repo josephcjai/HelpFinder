@@ -258,26 +258,26 @@ export default function Home() {
       <Navbar user={user} onLogout={handleLogout} isLoading={isAuthLoading} />
 
       {/* Main Content */}
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
+      <main className="w-full max-w-7xl mx-auto py-10 sm:py-16 px-0 sm:px-6 lg:px-8">
 
         {/* Create/Edit Modal Overlay */}
         {(showCreateForm || editingTask) && (
-          <div className="fixed inset-0 z-[3000] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-              <div className="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/80 backdrop-blur-sm transition-opacity" aria-hidden="true" onClick={() => { setShowCreateForm(false); setEditingTask(null) }}></div>
-              <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <CreateTaskForm
-                    onTaskSaved={handleTaskSaved}
-                    onCancel={() => {
-                      setShowCreateForm(false)
-                      setEditingTask(null)
-                    }}
-                    editingTask={editingTask}
-                    initialCategoryId={selectedCategory}
-                  />
-                </div>
+          <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4 sm:p-0" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            {/* Backdrop */}
+            <div className="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/80 backdrop-blur-sm transition-opacity" aria-hidden="true" onClick={() => { setShowCreateForm(false); setEditingTask(null) }}></div>
+            
+            {/* Modal Container */}
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all animate-scale-in">
+              <div className="p-6">
+                <CreateTaskForm
+                  onTaskSaved={handleTaskSaved}
+                  onCancel={() => {
+                    setShowCreateForm(false)
+                    setEditingTask(null)
+                  }}
+                  editingTask={editingTask}
+                  initialCategoryId={selectedCategory}
+                />
               </div>
             </div>
           </div>
@@ -320,7 +320,7 @@ export default function Home() {
             </h2>
 
             {/* View Toggles */}
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-3 sm:gap-4 overflow-visible pb-2 -mx-2 px-2 sm:mx-0 sm:px-0">
               {user && (
                 <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
                   <button
@@ -466,7 +466,7 @@ export default function Home() {
             <>
               {viewMode === 'map' ? (
                 <div className="flex flex-col gap-6">
-                  <div className="w-full h-[600px] rounded-xl overflow-hidden shadow-sm border border-gray-200 relative">
+                  <div className="w-full h-[600px] rounded-xl overflow-hidden shadow-sm border border-gray-200 relative native-map">
                     {/* Map Search Overlay */}
                     <div className="absolute top-4 left-4 right-4 z-[2000] flex gap-2 max-w-md mx-auto">
                       <input

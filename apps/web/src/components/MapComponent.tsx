@@ -1,7 +1,8 @@
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle, ZoomControl } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useEffect } from 'react'
+import { useRouter } from 'next/router'
 
 // Fix for default marker icons in Next.js
 const iconUrl = 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png'
@@ -64,21 +65,19 @@ function MapUpdater({ center, zoom }: { center: [number, number], zoom: number }
     return null
 }
 
-import { useRouter } from 'next/router'
-
-// ... imports
-
 const DEFAULT_CENTER: [number, number] = [51.505, -0.09]
 
 export default function MapComponent({ tasks = [], onLocationSelect, selectedLocation, center = DEFAULT_CENTER, zoom = 13, searchRadius }: MapComponentProps) {
     const router = useRouter()
 
     return (
-        <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%', borderRadius: '1rem', zIndex: 1 }}>
+        <MapContainer center={center} zoom={zoom} zoomControl={false} style={{ height: '100%', width: '100%', borderRadius: '1rem', zIndex: 1 }}>
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+
+            <ZoomControl position="bottomright" />
 
             {/* Render Task Markers */}
             {tasks.map(task => (
@@ -97,7 +96,6 @@ export default function MapComponent({ tasks = [], onLocationSelect, selectedLoc
                 )
             ))}
 
-            {/* ... rest of component */}
             {selectedLocation && searchRadius && (
                 <Circle
                     center={[selectedLocation.lat, selectedLocation.lng]}

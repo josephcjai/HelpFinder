@@ -47,6 +47,12 @@ export default function Register() {
 
     return (
         <div className="container" style={{ maxWidth: '400px', marginTop: '4rem' }}>
+            <div className="mb-6">
+                <Link href="/" className="inline-flex items-center text-sm text-gray-500 hover:text-primary transition-colors">
+                    <span className="material-symbols-outlined text-lg mr-1">arrow_back</span>
+                    Back to Home
+                </Link>
+            </div>
             <div className="card">
                 <h1 className="heading-1" style={{ textAlign: 'center' }}>Register</h1>
                 {error && <div className="mb-4" style={{ color: 'var(--danger)', textAlign: 'center' }}>{error}</div>}
