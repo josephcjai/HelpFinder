@@ -1,34 +1,25 @@
 # HelpFinder End-to-End Production Deployment & Release Manifest
 
-This document contains detailed, step-by-step instructions to deploy backend API changes to your production Linux server and compile the Android App Bundle (`.aab`) for the Google Play Store. 
+This document contains detailed, step-by-step instructions to deploy backend API changes to your production Linux server and upload the pre-built Android App Bundle (`.aab`) to the Google Play Store.
 
 ---
 
 ## PART 1: Deploying Backend API Server Changes
 
-### Step 1: Commit and Push Local Changes
-Before deploying, ensure all local changes (including types, user entities, and api controllers) are committed and pushed to the main repository:
-```powershell
-# On your local machine
-git add .
-git commit -m "feat: implement first-login redirection and welcome banner"
-git push origin main
-```
-
-### Step 2: SSH into the Production Server
+### Step 1: SSH into the Production Server
 Log in to your VPS (e.g., AWS Lightsail or DigitalOcean Ubuntu server):
 ```bash
 ssh -i LightsailDefaultKey-*.pem ubuntu@<YOUR_PRODUCTION_STATIC_IP>
 ```
 
-### Step 3: Pull the Latest Code
+### Step 2: Pull the Latest Code
 Navigate to the application root directory and pull the changes:
 ```bash
 cd /var/www/helpfinder
 git pull origin main
 ```
 
-### Step 4: Install Dependencies & Build
+### Step 3: Install Dependencies & Build
 Install new dependencies and compile the updated modules in the exact order (shared package → API server):
 ```bash
 # Install package dependencies
@@ -45,7 +36,7 @@ pnpm build
 cd ../..
 ```
 
-### Step 5: Database Schema Synchronization (Critical)
+### Step 4: Database Schema Synchronization (Critical)
 Because we introduced a new database column (`isFirstLogin`) on the `UserEntity`, the production PostgreSQL schema must be updated. Follow this temporary sync procedure:
 
 1. **Open the environment file** on the server:
@@ -81,6 +72,31 @@ Because we introduced a new database column (`isFirstLogin`) on the `UserEntity`
 
 6. **Restart the API process** one final time:
    ```bash
-    pm2 restart hf-api
-    ```
+   pm2 restart hf-api
+   ```
 
+---
+
+## PART 2: Uploading the Android App to Google Play Console
+
+Follow these steps to upload your pre-built Android App Bundle (`app-release.aab`) to the Google Play Store.
+
+### Step 1: Locate your Pre-built App Bundle
+Confirm you have the signed bundle file ready on your machine. By default, the build output is located at:
+`apps/web/android/app/build/outputs/bundle/release/app-release.aab`
+
+### Step 2: Log in to Google Play Console
+Open your browser and sign in at the [Google Play Console](https://play.google.com/console).
+
+### Step 3: Create a New Release
+1. Select the **HelpFinder** application from your dashboard list.
+2. In the left-hand navigation menu, choose your release track:
+   - For initial testing: Go to **Testing > Internal testing**.
+   - For direct launch: Go to **Release > Production**.
+3. Click on the **Create new release** button in the top right.
+
+### Step 4: Upload the Bundle & Publish
+1. In the **App bundles** section, upload your **`app-release.aab`** file.
+2. Fill out the **Release name** (e.g., `1.1` or `1.1.1`) and add **Release notes** describing the new welcome banner and account update prompts.
+3. Click **Save as draft**, then click **Next** / **Review release**.
+4. Review any warnings (minor API target warnings can be ignored for testing) and click **Start rollout to Production** to complete the process.
