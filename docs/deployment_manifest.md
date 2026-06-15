@@ -81,62 +81,6 @@ Because we introduced a new database column (`isFirstLogin`) on the `UserEntity`
 
 6. **Restart the API process** one final time:
    ```bash
-   pm2 restart hf-api
-   ```
+    pm2 restart hf-api
+    ```
 
----
-
-## PART 2: Building and Packaging the Android App
-
-This process compiles the web assets with the production API endpoint, synchronizes them with the Android project structure, and bundles the application into a signed `.aab` package.
-
-### Step 1: Compile Web Assets for Mobile (Local Machine)
-Ensure you are in the `apps/web` directory on your local machine and build the static output pointing to the production API:
-```powershell
-cd apps/web
-
-# Build Next.js output for static packaging using the production API base URL
-npx cross-env CAPACITOR_BUILD=true NEXT_PUBLIC_API_BASE=https://api.helpfinder4u.com npm run build:mobile
-```
-
-### Step 2: Synchronize Assets with Android Project
-Copy the newly built static assets from the Next.js `out` directory into the native Android folder structure:
-```powershell
-npx cap sync android
-```
-
-### Step 3: Bundle and Sign the Android Package
-Use Gradle to compile the Android project into a signed Android App Bundle (AAB). The keystore is already configured in the project's build files (`release.jks` with credentials `hfpass123`):
-```powershell
-# Navigate to the android directory
-cd android
-
-# Compile and package in release mode
-cmd /c gradlew.bat bundleRelease
-```
-
-### Step 4: Locate the Output Bundle
-Once the Gradle build reports `BUILD SUCCESSFUL`, your output file will be generated at:
-`apps/web/android/app/build/outputs/bundle/release/app-release.aab`
-
----
-
-## PART 3: Uploading to Google Play Console
-
-### Step 1: Log in
-Open your browser and sign in at the [Google Play Console](https://play.google.com/console).
-
-### Step 2: Create a New Release
-1. Select the **HelpFinder** application from your dashboard list.
-2. In the left-hand navigation menu, choose your release track:
-   - For initial testing: Go to **Testing > Internal testing**.
-   - For direct launch: Go to **Release > Production**.
-3. Click on the **Create new release** button in the top right.
-
-### Step 3: Upload the Bundle
-1. In the **App bundles** section, upload the **`app-release.aab`** file generated in Part 2.
-2. Fill out the **Release name** (e.g., `1.1` or `1.1.1`) and add **Release notes** describing the new welcome banner and account update prompts.
-3. Click **Save as draft**, then click **Next** / **Review release**.
-
-### Step 4: Rollout
-Review any warnings (minor API target warnings can be ignored for testing) and click **Start rollout to Production** to complete the process.
