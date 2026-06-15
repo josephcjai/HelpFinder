@@ -27,7 +27,11 @@ export default function Login() {
             }
 
             setToken(data.access_token)
-            router.push('/')
+            if (data.isFirstLogin) {
+                router.push('/profile?firstLogin=true')
+            } else {
+                router.push('/')
+            }
         } catch (err: any) {
             setError(err.message)
         }

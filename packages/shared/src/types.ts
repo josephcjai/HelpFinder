@@ -22,6 +22,7 @@ export interface UserProfile {
     requesterRatingCount?: number
     deletedAt?: Date
     currency?: string
+    isFirstLogin?: boolean
 }
 
 export const USER_AVATARS = [

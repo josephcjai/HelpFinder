@@ -110,5 +110,8 @@ export class UserEntity {
 
   @Column({ type: 'timestamp', nullable: true })
   restorationRequestedAt?: Date
+
+  @Column({ type: 'boolean', default: true })
+  isFirstLogin!: boolean
 }
 

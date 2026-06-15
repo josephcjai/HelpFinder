@@ -29,3 +29,7 @@ Thumbs.db
 
 # Scratchpad
 temp/
+
+# Recovered chat
+recovered_chat_history/
+

@@ -32,6 +32,7 @@ export default function ProfilePage() {
     const [user, setUser] = useState<UserProfile | null>(null)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [isFirstLoginFlow, setIsFirstLoginFlow] = useState(false)
 
     // Change Password State
     const [currentPassword, setCurrentPassword] = useState('')
@@ -145,6 +146,18 @@ export default function ProfilePage() {
         init()
     }, [])
 
+    useEffect(() => {
+        if (router.isReady && router.query.firstLogin === 'true') {
+            setIsFirstLoginFlow(true)
+            setActiveTab('settings')
+        }
+    }, [router.isReady, router.query])
+
+    const handleSkip = () => {
+        setIsFirstLoginFlow(false)
+        router.push('/')
+    }
+
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault()
         setSaving(true)
@@ -159,10 +172,15 @@ export default function ProfilePage() {
                 avatarIcon: avatarMode === 'icon' ? avatarIcon : null,
                 avatarInitials: avatarMode === 'initials' ? customInitials : null,
                 avatarColor,
-                currency
+                currency,
+                isFirstLogin: false
             })
             setUser(updated)
             showToast('Profile updated successfully', 'success')
+            if (isFirstLoginFlow) {
+                setIsFirstLoginFlow(false)
+                router.push('/')
+            }
         } catch (error) {
             showToast('Failed to update profile', 'error')
             console.error(error)
@@ -225,6 +243,26 @@ export default function ProfilePage() {
         <>
             <Navbar user={user} onLogout={() => { localStorage.removeItem('token'); router.push('/') }} />
             <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+                {isFirstLoginFlow && (
+                    <div className="mb-8 p-6 bg-gradient-to-r from-indigo-500/10 to-blue-500/10 border border-indigo-100/50 dark:border-indigo-900/30 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 text-indigo-900 dark:text-indigo-300 shadow-sm animate-fade-in">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                                <span className="material-icons-round text-2xl">celebration</span>
+                            </div>
+                            <div>
+                                <h3 className="font-display font-bold text-base text-slate-800 dark:text-white">Welcome to HelpFinder!</h3>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Please take a moment to update your default location and address so you can search tasks nearby.</p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleSkip}
+                            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-bold rounded-xl text-sm transition-all transform hover:-translate-y-0.5 shadow-md shadow-indigo-600/20 active:translate-y-0 flex-shrink-0"
+                        >
+                            Skip for now
+                        </button>
+                    </div>
+                )}
                 <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="flex items-center gap-4">
                         <div className="relative">
